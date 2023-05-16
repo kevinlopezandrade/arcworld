@@ -19,3 +19,4 @@ repos:
     hooks:
       - id: flake8
         args: ["--extend-ignore=E203", "--max-line-length=88"]
+        exclude: ^arcworld/deprecated
