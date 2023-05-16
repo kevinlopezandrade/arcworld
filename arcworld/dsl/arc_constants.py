@@ -1,4 +1,7 @@
-from arcworld.dsl.arc_types import *
+import arcworld.dsl.arc_types as ARC_TYPE
+
+# TODO: Maybe setting the __all__ attribute in arc_types moduel
+# works better and we avoid defining ARC_TYPE and use the star import.
 
 ZERO = 0
 ONE = 1
@@ -35,32 +38,32 @@ THREE_BY_THREE = (3, 3)
 
 
 arc_constants_mapper = {
-    'ZERO': {'type': Integer, 'value': ZERO},
-    'ONE': {'type': Integer, 'value': ONE},
-    'TWO': {'type': Integer, 'value': TWO},
-    'THREE': {'type': Integer, 'value': THREE},
-    'FOUR': {'type': Integer, 'value': FOUR},
-    'FIVE': {'type': Integer, 'value': FIVE},
-    'SIX': {'type': Integer, 'value': SIX},
-    'SEVEN': {'type': Integer, 'value': SEVEN},
-    'EIGHT': {'type': Integer, 'value': EIGHT},
-    'NINE': {'type': Integer, 'value': NINE},
-    'TEN': {'type': Integer, 'value': TEN},
-    'F': {'type': Boolean, 'value': F},
-    'T': {'type': Boolean, 'value': T},
-    'NEG_ONE': {'type': Integer, 'value': NEG_ONE},
-    'ORIGIN': {'type': IntegerTuple, 'value': ORIGIN},
-    'UNITY': {'type': IntegerTuple, 'value': UNITY},
-    'DOWN': {'type': IntegerTuple, 'value': DOWN},
-    'RIGHT': {'type': IntegerTuple, 'value': RIGHT},
-    'UP': {'type': IntegerTuple, 'value': UP},
-    'LEFT': {'type': IntegerTuple, 'value': LEFT},
-    'NEG_TWO': {'type': Integer, 'value': NEG_TWO},
-    'NEG_UNITY': {'type': IntegerTuple, 'value': NEG_UNITY},
-    'UP_RIGHT': {'type': IntegerTuple, 'value': UP_RIGHT},
-    'DOWN_LEFT': {'type': IntegerTuple, 'value': DOWN_LEFT},
-    'TWO_BY_TWO': {'type': IntegerTuple, 'value': TWO_BY_TWO},
-    'THREE_BY_THREE': {'type': IntegerTuple, 'value': THREE_BY_THREE},
-    'ZERO_BY_TWO': {'type': IntegerTuple, 'value': ZERO_BY_TWO},
-    'TWO_BY_ZERO': {'type': IntegerTuple, 'value': TWO_BY_ZERO}
+    "ZERO": {"type": ARC_TYPE.Integer, "value": ZERO},
+    "ONE": {"type": ARC_TYPE.Integer, "value": ONE},
+    "TWO": {"type": ARC_TYPE.Integer, "value": TWO},
+    "THREE": {"type": ARC_TYPE.Integer, "value": THREE},
+    "FOUR": {"type": ARC_TYPE.Integer, "value": FOUR},
+    "FIVE": {"type": ARC_TYPE.Integer, "value": FIVE},
+    "SIX": {"type": ARC_TYPE.Integer, "value": SIX},
+    "SEVEN": {"type": ARC_TYPE.Integer, "value": SEVEN},
+    "EIGHT": {"type": ARC_TYPE.Integer, "value": EIGHT},
+    "NINE": {"type": ARC_TYPE.Integer, "value": NINE},
+    "TEN": {"type": ARC_TYPE.Integer, "value": TEN},
+    "F": {"type": ARC_TYPE.Boolean, "value": F},
+    "T": {"type": ARC_TYPE.Boolean, "value": T},
+    "NEG_ONE": {"type": ARC_TYPE.Integer, "value": NEG_ONE},
+    "ORIGIN": {"type": ARC_TYPE.IntegerTuple, "value": ORIGIN},
+    "UNITY": {"type": ARC_TYPE.IntegerTuple, "value": UNITY},
+    "DOWN": {"type": ARC_TYPE.IntegerTuple, "value": DOWN},
+    "RIGHT": {"type": ARC_TYPE.IntegerTuple, "value": RIGHT},
+    "UP": {"type": ARC_TYPE.IntegerTuple, "value": UP},
+    "LEFT": {"type": ARC_TYPE.IntegerTuple, "value": LEFT},
+    "NEG_TWO": {"type": ARC_TYPE.Integer, "value": NEG_TWO},
+    "NEG_UNITY": {"type": ARC_TYPE.IntegerTuple, "value": NEG_UNITY},
+    "UP_RIGHT": {"type": ARC_TYPE.IntegerTuple, "value": UP_RIGHT},
+    "DOWN_LEFT": {"type": ARC_TYPE.IntegerTuple, "value": DOWN_LEFT},
+    "TWO_BY_TWO": {"type": ARC_TYPE.IntegerTuple, "value": TWO_BY_TWO},
+    "THREE_BY_THREE": {"type": ARC_TYPE.IntegerTuple, "value": THREE_BY_THREE},
+    "ZERO_BY_TWO": {"type": ARC_TYPE.IntegerTuple, "value": ZERO_BY_TWO},
+    "TWO_BY_ZERO": {"type": ARC_TYPE.IntegerTuple, "value": TWO_BY_ZERO},
 }
