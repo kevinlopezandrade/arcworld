@@ -145,9 +145,7 @@ def generate_key(length: Integer) -> String:
     return key
 
 
-def read_base_programs(
-    path: String, test_run: Boolean
-) -> Tuple[List[Tuple[String, String]], List[Tuple[String, String]]]:
+def read_base_programs(path: String, test_run: Boolean) -> List[Tuple[str, str]]:
     """reads programs from json files"""
     with open(path) as fp:
         programs = json.load(fp)
@@ -390,7 +388,7 @@ def generate_shapes(
     return frozenset(random_shapes)
 
 
-def get_proto_objs(shapes: IndicesSet, max_obj_dimension: Integer) -> Objects:
+def get_proto_objs(shapes: IndicesSet, max_obj_dimension: Integer) -> Shapes:
     """turns shapes into proto-objects"""
     bounding_function = lbind(greater, max_obj_dimension)
     small_enough = compose(bounding_function, compose(decrement, height))
@@ -402,10 +400,15 @@ def get_proto_objs(shapes: IndicesSet, max_obj_dimension: Integer) -> Objects:
     return proto_objs
 
 
-def get_locations(grid_shape, max_obj_dimension, margin, speedup_factor):
+def get_locations(
+    grid_shape: Tuple[int, int],
+    max_obj_dimension: int,
+    margin: int,
+    speedup_factor: int,
+) -> Coordinates:
     h, w = grid_shape
     d = max_obj_dimension + 4 * margin
-    locations = set()
+    locations: Coordinates = set()
     for i in range(0, h - d + 1, speedup_factor):
         for j in range(0, w - d + 1, speedup_factor):
             locations.add((i, j))
@@ -416,12 +419,14 @@ def sample_object(
     grid_shape: Grid,
     max_obj_dimension: Integer,
     margin: Integer,
-    selection: Tuple[Object],
+    selection: Tuple[Shape],
     palette_scheme: Tuple[Integer],
-    locations: Indices,
-    occupied: Indices,
-) -> Tuple[Object, Indices]:
+    locations: Coordinates,
+    occupied: Coordinates,
+) -> Tuple[Shape, Coordinates]:
     """chooses a random object and placement"""
+    # There is no need to passs the grid shape here, since
+    # it is not even used.
     h, w = grid_shape
     d = max_obj_dimension + 4 * margin
     for i, j in occupied:
@@ -439,6 +444,46 @@ def sample_object(
     obj = random.choice(selection)
     offset_i = random.randint(0, max_obj_dimension - height(obj))
     offset_j = random.randint(0, max_obj_dimension - width(obj))
+    offset = (offset_i, offset_j)
+    location = add(loc_base, offset)
+    obj = shift(obj, location)
+    obj_color = random.choice(palette_scheme)
+    obj = recolor(obj_color, obj)
+    return obj, locations
+
+
+def sample_object_test(
+    grid_shape: Grid,
+    max_obj_dimension: Integer,
+    margin: Integer,
+    shape: Shape,
+    palette_scheme: Tuple[Integer],
+    locations: Coordinates,
+    occupied: Coordinates,
+) -> Tuple[Shape, Coordinates]:
+    """chooses a random object and placement"""
+    # There is no need to passs the grid shape here, since
+    # it is not even used.
+    h, w = grid_shape
+    d = max_obj_dimension + 4 * margin
+    for i, j in occupied:
+        locations_pruned = set()
+        for a, b in locations:
+            if i < a or i >= a + d or j < b or j >= b + d:
+                locations_pruned.add((a, b))
+        locations = locations_pruned
+    if len(locations) == 0:
+        return None, locations
+    shift_vector = double(astuple(margin, margin))
+    shift_function = rbind(add, shift_vector)
+    locations_shifted = apply(shift_function, locations)
+    # loc_base = random.choice(tuple(locations_shifted))
+    loc_base = tuple(locations_shifted)[0]
+    obj = shape
+    # offset_i = random.randint(0, max_obj_dimension - height(obj))
+    # offset_j = random.randint(0, max_obj_dimension - width(obj))
+    offset_i = 0
+    offset_j = 0
     offset = (offset_i, offset_j)
     location = add(loc_base, offset)
     obj = shift(obj, location)

@@ -2,16 +2,16 @@ from arcworld.deprecated.generator_utils import *
 
 
 def sample_input_grid(
-    satisfying_objects: Objects,
-    unsatisfying_objects: Objects,
-    num_objects_range: IntegerTuple,
+    satisfying_objects: Shapes,
+    unsatisfying_objects: Shapes,
+    num_objects_range: Coordinate,
     background_color_options: Tuple[Integer],
     max_obj_dimension: Integer,
-    grid_dimensions_range: IntegerTuple,
+    grid_dimensions_range: Coordinate,
     margin: Integer,
     speedup_factor: Integer,
     palette_scheme: Tuple[Integer],
-) -> Tuple[Grid, Objects, Integer]:
+) -> Tuple[Grid, Shapes, Integer]:
     """samples an input grid"""
     background_color = random.choice(background_color_options)
     min_grid_dim, max_grid_dim = grid_dimensions_range
@@ -46,6 +46,20 @@ def sample_input_grid(
                 locations=locations,
                 occupied=occupied,
             )
+            # random_shape = random.choice(objs_mapper[group])
+
+            # obj, locations = sample_object_test(
+            #     grid_shape=grid_shape,
+            #     max_obj_dimension=max_obj_dimension,
+            #     margin=margin,
+            #     shape=random_shape,
+            #     palette_scheme=palette_scheme,
+            #     locations=locations,
+            #     occupied=occupied,
+            # )
+
+            # testing_grid.place_object(random_shape)
+
             if obj is None:
                 return None, frozenset({}), background_color
             occupied = backdrop(obj)
@@ -60,7 +74,7 @@ def sample_input_grid(
 def construct_output_grid(
     background_color: Integer,
     input_grid: Grid,
-    selection: Objects,
+    selection: Shapes,
     condition: Callable,
     transformation: Callable,
     apply_to_original: Callable,
@@ -80,15 +94,15 @@ def construct_output_grid(
 
 
 def sample_task(
-    objs: Objects,
+    objs: Shapes,
     conditions: List[Tuple[String, Callable]],
     transformations: List[Tuple[String, Callable]],
     palette_schemes: List[Tuple[String, Tuple[Integer]]],
     meta_schemes: List[Tuple[String, String]],
     unsat_schemes: List[Tuple[String, Boolean]],
     parameters: Dict,
-    conditions_map: Dict[String, Objects],
-    transformations_map: Dict[String, Objects],
+    conditions_map: Dict[String, Shapes],
+    transformations_map: Dict[String, Shapes],
 ) -> Tuple[Task, String]:
     """samples a task"""
     condition_name, condition = random.choice(conditions)
@@ -118,6 +132,9 @@ def sample_task(
         apply_to_unsat = collapse
     else:
         apply_to_unsat = identity
+
+    # This is always the same, since we only pass one thing to sample.
+    # There it can be avoided to check, and do it before entering.
     satisfying_objects = (
         conditions_map[condition_name] & transformations_map[transformation_name]
     )
@@ -349,6 +366,12 @@ def generate_tasks(
     ):
         not_empty = chain(positive, size, transformation)
         not_identity = compose(flip, fork(equality, identity, transformation))
+
+        # Outbox is the box surrounding the shape, it does not contain any coordinate
+        # of the shape. So if after applying the transformation, the shape intersects
+        # with the outbox then I'm out of bounds. And the transformation produced
+        # is not valid. With Margin = 1 I ensure that no transformation produces
+        # a shape that touches my outbox.
         not_out_of_bounds = matcher(
             compose(
                 size,

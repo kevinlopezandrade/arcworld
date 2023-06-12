@@ -1,19 +1,6 @@
-from typing import (
-    Any,
-    Callable,
-    Container,
-    FrozenSet,
-    List,
-    Optional,
-    Sized,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import FrozenSet, Sized, Tuple, TypeVar, cast
 
 from arcworld.dsl.arc_types import (
-    ARCFrozenSet,
     Boolean,
     Coordinate,
     Coordinates,
@@ -22,462 +9,16 @@ from arcworld.dsl.arc_types import (
     Integer,
     IntegerSet,
     IterableContainer,
-    Numerical,
     Patch,
     Piece,
     Shape,
     Shapes,
-    SupportsRichComparison,
 )
 
 _T = TypeVar("_T")
 _S = TypeVar("_S")
 _R = TypeVar("_R")
 _W = TypeVar("_W")
-
-
-def identity(x: _T) -> _T:
-    """identity function"""
-    return x
-
-
-def add(a: Numerical, b: Numerical) -> Numerical:
-    """addition"""
-    if isinstance(a, int) and isinstance(b, int):
-        return a + b
-    elif isinstance(a, tuple) and isinstance(b, tuple):
-        return (a[0] + b[0], a[1] + b[1])
-    elif isinstance(a, int) and isinstance(b, tuple):
-        return (a + b[0], a + b[1])
-    elif isinstance(a, tuple) and isinstance(b, int):
-        return (a[0] + b, a[1] + b)
-    else:
-        raise TypeError("Not valid types")
-
-
-def subtract(a: Numerical, b: Numerical) -> Numerical:
-    """subtraction"""
-    if isinstance(a, int) and isinstance(b, int):
-        return a - b
-    elif isinstance(a, tuple) and isinstance(b, tuple):
-        return (a[0] - b[0], a[1] - b[1])
-    elif isinstance(a, int) and isinstance(b, tuple):
-        return (a - b[0], a - b[1])
-    elif isinstance(a, tuple) and isinstance(b, int):
-        return (a[0] - b, a[1] - b)
-    else:
-        raise TypeError("Not valid types")
-
-
-def multiply(a: Numerical, b: Numerical) -> Numerical:
-    """multiplication"""
-    if isinstance(a, int) and isinstance(b, int):
-        return a * b
-    elif isinstance(a, tuple) and isinstance(b, tuple):
-        return (a[0] * b[0], a[1] * b[1])
-    elif isinstance(a, int) and isinstance(b, tuple):
-        return (a * b[0], a * b[1])
-    elif isinstance(a, tuple) and isinstance(b, int):
-        return (a[0] * b, a[1] * b)
-    else:
-        raise ValueError("Not valid types")
-
-
-def divide(a: Numerical, b: Numerical) -> Numerical:
-    """floor division"""
-    if isinstance(a, int) and isinstance(b, int):
-        return a // b
-    elif isinstance(a, tuple) and isinstance(b, tuple):
-        return (a[0] // b[0], a[1] // b[1])
-    elif isinstance(a, int) and isinstance(b, tuple):
-        return (a // b[0], a // b[1])
-    elif isinstance(a, tuple) and isinstance(b, int):
-        return (a[0] // b, a[1] // b)
-    else:
-        raise TypeError("Not valid types")
-
-
-def invert(n: Numerical) -> Numerical:
-    """inversion with respect to addition"""
-    return -n if isinstance(n, int) else (-n[0], -n[1])
-
-
-def even(n: Integer) -> Boolean:
-    """evenness"""
-    return n % 2 == 0
-
-
-def double(n: Numerical) -> Numerical:
-    """scaling by two"""
-    return n * 2 if isinstance(n, int) else (n[0] * 2, n[1] * 2)
-
-
-def halve(n: Numerical) -> Numerical:
-    """scaling by one half"""
-    return n // 2 if isinstance(n, int) else (n[0] // 2, n[1] // 2)
-
-
-def flip(b: Boolean) -> Boolean:
-    """logical not"""
-    return not b
-
-
-def equality(a: _T, b: _T) -> Boolean:
-    """equality"""
-    return a == b
-
-
-def contained(value: _T, container: Container[_T]) -> Boolean:
-    """element of"""
-    return value in container
-
-
-def combine(
-    a: IterableContainer[_T], b: IterableContainer[_T]
-) -> IterableContainer[_T]:
-    """union"""
-    return type(a)((*a, *b))
-
-
-# TODO: See if its worth all the struggle and mantainance, for just
-# this typing hints.
-def intersection(a: ARCFrozenSet[_T], b: ARCFrozenSet[_T]) -> ARCFrozenSet[_T]:
-    """returns the intersection of two containers"""
-    return a & b
-
-
-def difference(
-    a: IterableContainer[_T], b: IterableContainer[_T]
-) -> IterableContainer[_T]:
-    """difference"""
-    return type(a)(e for e in a if e not in b)
-
-
-def dedupe(iterable: Tuple[_T]) -> Tuple[_T]:
-    """remove duplicates"""
-    return tuple(e for i, e in enumerate(iterable) if iterable.index(e) == i)
-
-
-# TODO: Here I should define that compfunc should return an element that is comparable.
-def order(container: IterableContainer[_T], compfunc: Callable[[_T], Any]) -> Tuple[_T]:
-    """order container by custom key"""
-    return tuple(sorted(container, key=compfunc))
-
-
-def repeat(item: _T, num: Integer) -> Tuple[_T]:
-    """repetition of item within vector"""
-    return tuple(item for _ in range(num))
-
-
-def greater(a: Integer, b: Integer) -> Boolean:
-    """greater"""
-    return a > b
-
-
-def size(container: Sized) -> Integer:
-    """cardinality"""
-    return len(container)
-
-
-def merge(
-    containers: IterableContainer[IterableContainer[_T]],
-) -> IterableContainer[_T]:
-    """merging"""
-    iterator = iter(containers)
-
-    try:
-        element = next(iterator)
-    except StopIteration:
-        raise ValueError("Empty IterableContainer")
-    else:
-        return type(element)(e for c in containers for e in c)
-
-
-def maximum(container: IntegerSet) -> Integer:
-    """maximum"""
-    return max(container, default=0)
-
-
-def minimum(container: IntegerSet) -> Integer:
-    """minimum"""
-    return min(container, default=0)
-
-
-def valmax(
-    container: IterableContainer[Integer], compfunc: Callable[[Integer], Integer]
-) -> Integer:
-    """maximum by custom function"""
-    # TODO: The fact that the default value is 0, makes the container to
-    # be a container for ints, ask michale if this is the intended purpose.
-    return compfunc(max(container, key=compfunc, default=0))
-
-
-def valmin(
-    container: IterableContainer[Integer], compfunc: Callable[[Integer], Integer]
-) -> Integer:
-    """minimum by custom function"""
-    return compfunc(min(container, key=compfunc, default=0))
-
-
-def argmax(
-    container: IterableContainer[_T], compfunc: Callable[[_T], SupportsRichComparison]
-) -> Optional[_T]:
-    """largest item by custom order"""
-    return max(container, key=compfunc, default=None)
-
-
-def argmin(
-    container: IterableContainer[_T], compfunc: Callable[[_T], SupportsRichComparison]
-) -> Optional[_T]:
-    """smallest item by custom order"""
-    return min(container, key=compfunc, default=None)
-
-
-def mostcommon(container: Union[List[_T], Tuple[_T]]) -> _T:
-    """most common item"""
-    # TODO: As far as I know, only list and tuple contain the
-    # count method. Ask Michael about this.
-    return max(set(container), key=container.count)
-
-
-def leastcommon(container: Union[List[_T], Tuple[_T]]) -> _T:
-    """least common item"""
-    return min(set(container), key=container.count)
-
-
-def initset(value: _T) -> FrozenSet[_T]:
-    """initialize container"""
-    return frozenset({value})
-
-
-def both(a: Boolean, b: Boolean) -> Boolean:
-    """logical and"""
-    return a and b
-
-
-def either(a: Boolean, b: Boolean) -> Boolean:
-    """logical or"""
-    return a or b
-
-
-def increment(x: Numerical) -> Numerical:
-    """incrementing"""
-    return x + 1 if isinstance(x, int) else (x[0] + 1, x[1] + 1)
-
-
-def decrement(x: Numerical) -> Numerical:
-    """decrementing"""
-    return x - 1 if isinstance(x, int) else (x[0] - 1, x[1] - 1)
-
-
-def crement(x: Numerical) -> Numerical:
-    """incrementing positive and decrementing negative"""
-    if isinstance(x, int):
-        return 0 if x == 0 else (x + 1 if x > 0 else x - 1)
-    return (
-        0 if x[0] == 0 else (x[0] + 1 if x[0] > 0 else x[0] - 1),
-        0 if x[1] == 0 else (x[1] + 1 if x[1] > 0 else x[1] - 1),
-    )
-
-
-def sign(x: Numerical) -> Numerical:
-    """sign"""
-    if isinstance(x, int):
-        return 0 if x == 0 else (1 if x > 0 else -1)
-    return (
-        0 if x[0] == 0 else (1 if x[0] > 0 else -1),
-        0 if x[1] == 0 else (1 if x[1] > 0 else -1),
-    )
-
-
-def positive(x: Integer) -> Boolean:
-    """positive"""
-    return x > 0
-
-
-def toivec(i: Integer) -> Coordinate:
-    """vector pointing vertically"""
-    return (i, 0)
-
-
-def tojvec(j: Integer) -> Coordinate:
-    """vector pointing horizontally"""
-    return (0, j)
-
-
-def sfilter(
-    container: IterableContainer[_T], condition: Callable[[_T], bool]
-) -> IterableContainer[_T]:
-    """keep elements in container that satisfy condition"""
-    return type(container)(e for e in container if condition(e))
-
-
-def mfilter(
-    container: IterableContainer[IterableContainer[_T]],
-    function: Callable[[IterableContainer[_T]], bool],
-) -> IterableContainer[_T]:
-    """filter and merge"""
-    # NOTE: mfilter is supposed to only work in nested containers.
-    return merge(sfilter(container, function))
-
-
-def extract(container: IterableContainer[_T], condition: Callable[[_T], bool]) -> _T:
-    """first element of container that satisfies condition"""
-    return next(e for e in container if condition(e))
-
-
-def totuple(container: IterableContainer[_T]) -> Tuple[_T]:
-    """conversion to tuple"""
-    return tuple(container)
-
-
-def first(container: IterableContainer[_T]) -> _T:
-    """first item of container"""
-    return next(iter(container))
-
-
-def last(container: IterableContainer[_T]) -> _T:
-    """last item of container"""
-    return max(enumerate(container))[1]
-
-
-def insert(value: _T, set: FrozenSet[_T]) -> FrozenSet[_T]:
-    """insert item into set"""
-    return set.union(frozenset({value}))
-
-
-def remove(value: _T, container: IterableContainer[_T]) -> IterableContainer[_T]:
-    """remove item from container"""
-    return type(container)(e for e in container if e != value)
-
-
-def other(container: IterableContainer[_T], value: _T) -> _T:
-    """other value in the container"""
-    return first(remove(value, container))
-
-
-def interval(start: Integer, stop: Integer, step: Integer) -> Tuple[Integer]:
-    """range"""
-    return tuple(range(start, stop, step))
-
-
-def astuple(a: Integer, b: Integer) -> Coordinate:
-    """constructs a tuple"""
-    return (a, b)
-
-
-def product(
-    a: IterableContainer[_T], b: IterableContainer[_S]
-) -> FrozenSet[Tuple[_T, _S]]:
-    """cartesian product"""
-    return frozenset((i, j) for j in b for i in a)
-
-
-def pair(a: Tuple[_T], b: Tuple[_T]) -> Tuple[Tuple[_T]]:
-    """zipping of two tuples"""
-    # TODO: Ask Maichel if its allowed to have different types.
-    return tuple(zip(a, b))
-
-
-def branch(condition: Boolean, if_value: _T, else_value: _S) -> Union[_T, _S]:
-    """if else branching"""
-    return if_value if condition else else_value
-
-
-def compose(outer: Callable[[_S], _R], inner: Callable[[_T], _S]) -> Callable[[_T], _R]:
-    """function composition"""
-    return lambda x: outer(inner(x))
-
-
-def chain(
-    h: Callable[[_W], _R], g: Callable[[_S], _W], f: Callable[[_T], _S]
-) -> Callable[[_T], _R]:
-    """function composition with three functions"""
-    return lambda x: h(g(f(x)))
-
-
-def matcher(function: Callable[[_T], _S], target: _S) -> Callable[[_T], bool]:
-    """construction of equality function"""
-    return lambda x: function(x) == target
-
-
-# TODO: Check for a better way to do this.
-def rbind(function: Callable[..., Any], fixed: Any) -> Callable[..., Any]:
-    """fix the rightmost argument"""
-    n = function.__code__.co_argcount
-    if n == 2:
-        return lambda x: function(x, fixed)
-    elif n == 3:
-        return lambda x, y: function(x, y, fixed)
-    else:
-        return lambda x, y, z: function(x, y, z, fixed)
-
-
-def lbind(function: Callable[..., Any], fixed: Any) -> Callable[..., Any]:
-    """fix the leftmost argument"""
-    n = function.__code__.co_argcount
-    if n == 2:
-        return lambda y: function(fixed, y)
-    elif n == 3:
-        return lambda y, z: function(fixed, y, z)
-    else:
-        return lambda y, z, a: function(fixed, y, z, a)
-
-
-# Report this error mayeb to Pyright Github.
-def power(function: Callable[[_T], _T], n: Integer) -> Callable[[_T], _T]:
-    """power of function"""
-    if n == 1:
-        return function
-    return compose(function, power(function, n - 1))
-
-
-def fork(
-    outer: Callable[[_S, _W], _R], a: Callable[[_T], _S], b: Callable[[_T], _W]
-) -> Callable[[_T], _R]:
-    """creates a wrapper function"""
-    return lambda x: outer(a(x), b(x))
-
-
-def apply(
-    function: Callable[[_T], _S], container: IterableContainer[_T]
-) -> IterableContainer[_S]:
-    """apply function to each item in container"""
-
-    return type(cast(IterableContainer[_S], container))(function(e) for e in container)
-
-
-def rapply(
-    functions: IterableContainer[Callable[[_T], _S]], value: _T
-) -> IterableContainer[_S]:
-    """apply each function in container to value"""
-    return type(cast(IterableContainer[_S], functions))(
-        function(value) for function in functions
-    )
-
-
-def mapply(
-    function: Callable[[IterableContainer[_T]], IterableContainer[_T]],
-    container: IterableContainer[IterableContainer[_T]],
-) -> IterableContainer[_T]:
-    """apply and merge"""
-    return merge(apply(function, container))
-
-
-def papply(function: Callable[[_T, _S], _R], a: Tuple[_T], b: Tuple[_S]) -> Tuple[_R]:
-    """apply function on two vectors"""
-    return tuple(function(i, j) for i, j in zip(a, b))
-
-
-# TODO: I don't know how to type annotate this + It's not used in the codebase
-# as per 'git grep mpapply'
-# def mpapply(function: Callable, a: Tuple, b: Tuple) -> Tuple:
-#     """apply function on two vectors and merge"""
-#     return merge(papply(function, a, b))
-
-# def prapply(function: Callable, a: Container, b: Container) -> FrozenSet:
-#     """apply function on cartesian product"""
-#     return frozenset(function(i, j) for j in b for i in a)
 
 
 def mostcolor(element: Element) -> Integer:
@@ -537,7 +78,7 @@ def colorcount(element: Element, value: Integer) -> Integer:
 
 def colorfilter(objs: Shapes, value: Integer) -> Shapes:
     """filter objects by color"""
-    return frozenset(obj for obj in objs if next(iter(obj))[0] == value)
+    return set(obj for obj in objs if next(iter(obj))[0] == value)
 
 
 def sizefilter(container: IterableContainer[Sized], n: Integer) -> FrozenSet[Sized]:
@@ -547,12 +88,12 @@ def sizefilter(container: IterableContainer[Sized], n: Integer) -> FrozenSet[Siz
 
 def asindices(grid: Grid) -> Coordinates:
     """indices of all grid cells"""
-    return frozenset((i, j) for i in range(len(grid)) for j in range(len(grid[0])))
+    return set((i, j) for i in range(len(grid)) for j in range(len(grid[0])))
 
 
 def ofcolor(grid: Grid, value: Integer) -> Coordinates:
     """indices of all grid cells with value"""
-    return frozenset(
+    return set(
         (i, j) for i, r in enumerate(grid) for j, v in enumerate(r) if v == value
     )
 
@@ -606,7 +147,7 @@ def toindices(patch: Patch) -> Coordinates:
 
 def recolor(value: Integer, patch: Patch) -> Shape:
     """recolor patch"""
-    return frozenset((value, index) for index in toindices(patch))
+    return set((value, index) for index in toindices(patch))
 
 
 def shift(patch: Patch, directions: Coordinate) -> Patch:
@@ -628,7 +169,7 @@ def normalize(patch: Patch) -> Patch:
 
 def dneighbors(loc: Coordinate) -> Coordinates:
     """directly adjacent indices"""
-    return frozenset(
+    return set(
         {
             (loc[0] - 1, loc[1]),
             (loc[0] + 1, loc[1]),
@@ -640,7 +181,7 @@ def dneighbors(loc: Coordinate) -> Coordinates:
 
 def ineighbors(loc: Coordinate) -> Coordinates:
     """diagonally adjacent indices"""
-    return frozenset(
+    return set(
         {
             (loc[0] - 1, loc[1] - 1),
             (loc[0] - 1, loc[1] + 1),
@@ -690,8 +231,8 @@ def objects(
 
 def partition(grid: Grid) -> Shapes:
     """each cell with the same value part of the same object"""
-    return frozenset(
-        frozenset(
+    return set(
+        set(
             (v, (i, j))
             for i, r in enumerate(grid)
             for j, v in enumerate(r)
@@ -703,8 +244,8 @@ def partition(grid: Grid) -> Shapes:
 
 def fgpartition(grid: Grid) -> Shapes:
     """each cell with the same value part of the same object without background"""
-    return frozenset(
-        frozenset(
+    return set(
+        set(
             (v, (i, j))
             for i, r in enumerate(grid)
             for j, v in enumerate(r)
@@ -813,14 +354,14 @@ def color(obj: Shape) -> Integer:
 def toobject(patch: Patch, grid: Grid) -> Shape:
     """object from patch and grid"""
     h, w = len(grid), len(grid[0])
-    return frozenset(
+    return set(
         (grid[i][j], (i, j)) for i, j in toindices(patch) if 0 <= i < h and 0 <= j < w
     )
 
 
 def asobject(grid: Grid) -> Shape:
     """conversion of grid to object"""
-    return frozenset((v, (i, j)) for i, r in enumerate(grid) for j, v in enumerate(r))
+    return set((v, (i, j)) for i, r in enumerate(grid) for j, v in enumerate(r))
 
 
 def rot90(grid: Grid) -> Grid:
@@ -1148,7 +689,7 @@ def backdrop(patch: Patch) -> Coordinates:
     indices = toindices(patch)
     si, sj = ulcorner(indices)
     ei, ej = lrcorner(indices)
-    return frozenset((i, j) for i in range(si, ei + 1) for j in range(sj, ej + 1))
+    return set((i, j) for i in range(si, ei + 1) for j in range(sj, ej + 1))
 
 
 def delta(patch: Patch) -> Coordinates:
