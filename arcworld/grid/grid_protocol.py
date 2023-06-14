@@ -11,9 +11,9 @@ class GridProtocol(Protocol):
         ...
 
     @property
-    def objects(self) -> Tuple[Shape]:
+    def shapes(self) -> Tuple[Shape]:
         ...
 
     @abstractmethod
-    def place_object(shape: Shape) -> Shape:
+    def place_object(self, shape: Shape) -> Shape:
         ...

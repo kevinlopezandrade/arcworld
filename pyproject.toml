@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "arcworld"
+version = "0.0.1"
+description = "Synthetic task generation for the ARC Challange"
+authors = ["Kevin Lopez <kevinlo@student.ethz.ch>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.24.3"
+# The following are star dependencies
+# in order to fix the numpy version we
+# want and force the other dependencies
+# to be compatible.
+scipy = "*"
+pandas = "*"
+matplotlib = "*"
+h5py = "*"
+tqdm = "*"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+isort = "*"
+black = "*"
+pyright = "*"
+
+
+[tool.black]
+line-length = 88
+include = 'arcworld\/.*\.pyi?$' # Matches only python files in the package.
+extend-exclude = '''
+(
+  arcworld/deprecated
+)
+'''
+
+[tool.isort]
+profile = "black"
+src_paths = ["arcworld"]
+skip_glob = ["arcworld/deprecated/*"]
+
+[tool.ruff]
+line-length = 88
+src = ["arcworld"]
+select = ["E", "F", "W", "N", "E266", "E262"]
+ignore = ["N812"]
+include = ["arcworld/*.py", "arcworld/*.pyi"]
+extend-exclude = ["arcworld/deprecated", "arcworld/examples.py"]
+# No rule should be fixed automatically
+fixable = []
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

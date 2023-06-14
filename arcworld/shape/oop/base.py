@@ -1,6 +1,9 @@
 from abc import abstractmethod
 from functools import cached_property
 
+import numpy as np
+from numpy.typing import NDArray
+
 from arcworld.internal.point_cloud.point_cloud import PointCloud
 from arcworld.shape.oop.utils import (
     delete_out_of_bounds_points,
@@ -93,7 +96,7 @@ class ShapeObject:
         return self._grid
 
     @cached_property
-    def as_shape_only_grid(self):
+    def as_shape_only_grid(self) -> NDArray[np.float64]:
         return self.pc.as_shape_only_grid()
 
     @property

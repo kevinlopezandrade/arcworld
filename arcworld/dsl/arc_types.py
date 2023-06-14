@@ -33,9 +33,9 @@ class ARCFrozenSet(Generic[_T_co], AbstractSet[_T_co]):
         return ARCFrozenSet.init_from_set(_aux)
 
     @classmethod
-    def init_from_set(cls, E: frozenset[_T_co]) -> "ARCFrozenSet[_T_co]":
+    def init_from_set(cls, s: frozenset[_T_co]) -> "ARCFrozenSet[_T_co]":
         arcfrozenset = cls()
-        arcfrozenset._frozenset = E
+        arcfrozenset._frozenset = s
         return arcfrozenset
 
 
