@@ -26,7 +26,7 @@ pytest = "^7.3.2"
 
 [tool.black]
 line-length = 88
-include = 'arcworld\/.*\.pyi?$' # Matches only python files in the package.
+include = 'arcworld\/.*\.pyi?$ | tests\/.*\.pyi?$' # Matches only python files in the package.
 extend-exclude = '''
 (
   arcworld/deprecated
@@ -35,7 +35,7 @@ extend-exclude = '''
 
 [tool.isort]
 profile = "black"
-src_paths = ["arcworld"]
+src_paths = ["arcworld", "tests"]
 skip_glob = ["arcworld/deprecated/*"]
 
 [tool.ruff]
@@ -43,7 +43,7 @@ line-length = 88
 src = ["arcworld"]
 select = ["E", "F", "W", "N", "E266", "E262"]
 ignore = ["N812"]
-include = ["arcworld/*.py", "arcworld/*.pyi"]
+include = ["arcworld/*.py", "arcworld/*.pyi", "tests/*.py"]
 extend-exclude = ["arcworld/deprecated", "arcworld/examples.py"]
 # No rule should be fixed automatically
 fixable = []
