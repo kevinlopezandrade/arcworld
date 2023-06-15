@@ -3,13 +3,17 @@ from typing import Callable, cast
 from arcworld.dsl.arc_types import Shapes
 from arcworld.filters.functional.single_shape_conditionals import CONDITIONALS
 from arcworld.filters.objects_filter import ShapesFilter
+from arcworld.grid.oop.grid_oop import to_shape_object
 
 
 class FunctionalFilter(ShapesFilter):
-    def __init__(self, name: str, func: Callable[..., bool]) -> None:
+    def __init__(
+        self, name: str, func: Callable[..., bool], to_shape_object: bool = False
+    ) -> None:
         super().__init__()
         self._name = name
         self._func = func
+        self._to_shape_object = to_shape_object
 
     @property
     def name(self) -> str:
@@ -19,7 +23,12 @@ class FunctionalFilter(ShapesFilter):
         res: Shapes = set()
 
         for shape in objects:
-            if self._func(shape):
+            aux = shape
+
+            if self._to_shape_object:
+                aux = to_shape_object(shape)
+
+            if self._func(aux):
                 res.add(shape)
 
         return res
@@ -37,4 +46,4 @@ def get_filter(name: str) -> FunctionalFilter:
     func = CONDITIONALS[name]
     func = cast(Callable[..., bool], func)
 
-    return FunctionalFilter(name, func)
+    return FunctionalFilter(name, func, to_shape_object=True)

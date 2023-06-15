@@ -203,9 +203,7 @@ class SubgridPickupGridSampler:
             # Otherwise it should have failed.
             return grid
 
-    def sample_input_grid(
-        self, shapes: Shapes, max_trials: int = 20
-    ) -> Optional[GridObject]:
+    def sample_input_grid(self, shapes: Shapes, max_trials: int = 20) -> GridObject:
         """
         Here we perform the initial placement of objects.
 
@@ -234,5 +232,5 @@ class SubgridPickupGridSampler:
             else:
                 return sampled_grid
 
-        # TODO: Decide if its better to return None or raise an Exception.
-        return None
+        # TODO: Raise a more specifi exception.
+        raise ValueError
