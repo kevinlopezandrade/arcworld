@@ -13,7 +13,6 @@ from typing import (
 )
 
 from arcworld.dsl.arc_types import (
-    ARCFrozenSet,
     Boolean,
     Coordinate,
     Coordinates,
@@ -28,6 +27,7 @@ from arcworld.dsl.arc_types import (
     Shape,
     Shapes,
     SupportsRichComparison,
+    arcfrozenset,
 )
 
 _T = TypeVar("_T")
@@ -141,8 +141,8 @@ def combine(
 
 # TODO: See if its worth all the struggle and mantainance, for just
 # this typing hints.
-def intersection(a: ARCFrozenSet[_T], b: ARCFrozenSet[_T]) -> ARCFrozenSet[_T]:
-    """returns the intersection of two containers"""
+def intersection(a: arcfrozenset[_T], b: arcfrozenset[_T]) -> arcfrozenset[_T]:
+    """returns the intersection of two frozen sets"""
     return a & b
 
 

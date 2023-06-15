@@ -18,7 +18,7 @@ You can find an small example of the API in **example.py**.
 We recommend using [conda](https://docs.conda.io/en/latest/) as a virtual
 environment manager to avoid conflicts with the hosting operating system.
 ```shell
-$ conda create -n arcworld python=3.9
+$ conda create -n arcworld python=3.10
 ```
 
 We use [poetry](https://python-poetry.org/) as our dependency manager and build

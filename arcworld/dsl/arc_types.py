@@ -3,40 +3,104 @@ from typing import (
     Any,
     Container,
     FrozenSet,
-    Generic,
     Iterable,
+    Iterator,
     Protocol,
-    Set,
     Sized,
     Tuple,
     TypeVar,
     Union,
+    cast,
 )
 
 _T = TypeVar("_T")
+_S = TypeVar("_S")
 _T_co = TypeVar("_T_co", covariant=True)
 _T_contra = TypeVar("_T_contra", contravariant=True)
 
 
 # Custom Protocol
 class IterableContainer(Iterable[_T], Container[_T], Sized, Protocol):
+    # We define init here to make it compatible with the current containers.
     def __init__(self, __iterable: Iterable[_T]) -> None:
         ...
 
 
-class ARCFrozenSet(Generic[_T_co], AbstractSet[_T_co]):
-    def __init__(self, __iterable: Iterable[_T_co] = []) -> None:
-        self._frozenset = frozenset(__iterable)
+# IMPORTANT: I need to add unit tests for this class.
+# If Errors in the whole pipeline at last do the following
+# arcfrozenset = frozenset
+class arcfrozenset(frozenset[_T_co]):  # noqa: N801
+    """
+    In essence its just a frozenset where no modifications
+    are made, besides from only adding an __init__. To make it
+    compatible with our IterableContainer protocol. Therefore
+    casting is secure.
+    """
 
-    def __and__(self, __value: AbstractSet[_T_co]) -> "ARCFrozenSet[_T_co]":
-        _aux = self._frozenset.__and__(__value)
-        return ARCFrozenSet.init_from_set(_aux)
+    def __init__(self, __iterable: Iterable[_T_co]) -> None:
+        """
+        Here we don't do anything since __new__ from frozenset is already called
+        during object construction which gives a frozenset back to this __init__
+        in self with type arcfrozenset.
+        """
+        ...
 
-    @classmethod
-    def init_from_set(cls, s: frozenset[_T_co]) -> "ARCFrozenSet[_T_co]":
-        arcfrozenset = cls()
-        arcfrozenset._frozenset = s
-        return arcfrozenset
+    def copy(self) -> "arcfrozenset[_T_co]":
+        return cast("arcfrozenset[_T_co]", super().copy())
+
+    def difference(self, *s: Iterable[object]) -> "arcfrozenset[_T_co]":
+        return cast("arcfrozenset[_T_co]", super().difference(*s))
+
+    def intersection(self, *s: Iterable[object]) -> "arcfrozenset[_T_co]":
+        return cast("arcfrozenset[_T_co]", super().intersection(*s))
+
+    def isdisjoint(self, __s: Iterable[_T_co]) -> bool:
+        return super().isdisjoint(__s)
+
+    def issubset(self, __s: Iterable[object]) -> bool:
+        return super().issubset(__s)
+
+    def issuperset(self, __s: Iterable[object]) -> bool:
+        return super().issuperset(__s)
+
+    def symmetric_difference(self, __s: Iterable[_T_co]) -> "arcfrozenset[_T_co]":
+        return cast("arcfrozenset[_T_co]", super().symmetric_difference(__s))
+
+    def union(self, *s: Iterable[_S]) -> "arcfrozenset[_T_co | _S]":
+        return cast("arcfrozenset[_T_co | _S]", super().union(*s))
+
+    def __len__(self) -> int:
+        return super().__len__()
+
+    def __contains__(self, __o: object) -> bool:
+        return super().__contains__(__o)
+
+    def __iter__(self) -> Iterator[_T_co]:
+        return super().__iter__()
+
+    def __and__(self, __value: AbstractSet[_T_co]) -> "arcfrozenset[_T_co]":
+        return cast("arcfrozenset[_T_co]", super().__and__(__value))
+
+    def __or__(self, __value: AbstractSet[_S]) -> "arcfrozenset[_T_co | _S]":
+        return cast("arcfrozenset[_T_co]", super().__or__(__value))
+
+    def __sub__(self, __value: AbstractSet[_T_co]) -> "arcfrozenset[_T_co]":
+        return cast("arcfrozenset[_T_co]", super().__sub__(__value))
+
+    def __xor__(self, __value: AbstractSet[_S]) -> "arcfrozenset[_T_co | _S]":
+        return cast("arcfrozenset[_T_co]", super().__xor__(__value))
+
+    def __le__(self, __value: AbstractSet[object]) -> bool:
+        return super().__le__(__value)
+
+    def __lt__(self, __value: AbstractSet[object]) -> bool:
+        return super().__lt__(__value)
+
+    def __ge__(self, __value: AbstractSet[object]) -> bool:
+        return super().__ge__(__value)
+
+    def __gt__(self, __value: AbstractSet[object]) -> bool:
+        return super().__gt__(__value)
 
 
 class ARCTuple(tuple[_T_co]):
@@ -92,13 +156,14 @@ Cell = Tuple[Integer, Coordinate]
 # Avoid FrozenSets since we cannot use them in our protocol.
 # TODO: MaybeCreate a Custom FrozenSet that satisfies our protocol.
 # Objects have been rename to Shapes, and we use FrozenSet here as well.
-Shape = Set[Cell]
-Shapes = Set[Shape]
+# Shape = Set[Cell]
+Shape = arcfrozenset[Cell]
+Shapes = arcfrozenset[Shape]
 
 # For the moment use Sets until I figure out how to
 # avoid the type checking errors.
-Coordinates = Set[Coordinate]
-IndicesSet = Set[Coordinates]
+Coordinates = arcfrozenset[Coordinate]
+IndicesSet = arcfrozenset[Coordinates]
 
 Patch = Union[Shape, Coordinates]
 Element = Union[Shape, Grid]

@@ -1,7 +1,7 @@
 from typing import Callable, Dict
 
 from arcworld.dsl.functional import (
-    Patch,
+    Coordinates,
     box,
     cmirror,
     combine,
@@ -20,7 +20,7 @@ from arcworld.dsl.functional import (
     vmirror,
 )
 
-ShapeAugementator = Callable[[Patch], Patch]
+ShapeAugementator = Callable[[Coordinates], Coordinates]
 
 
 def augm_scheme(f):

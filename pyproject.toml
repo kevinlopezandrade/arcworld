@@ -6,23 +6,22 @@ authors = ["Kevin Lopez <kevinlo@student.ethz.ch>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 numpy = "^1.24.3"
-# The following are star dependencies
-# in order to fix the numpy version we
-# want and force the other dependencies
-# to be compatible.
-scipy = "*"
-pandas = "*"
+scipy = "^1.9.3"
+pandas = "^2.0.2"
+tqdm = "^4.65"
 matplotlib = "*"
-h5py = "*"
-tqdm = "*"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "*"
-isort = "*"
-black = "*"
-pyright = "*"
+isort = "^5.12.0"
+ruff = "^0.0.272"
+black = "^23.3.0"
+# pyright = "^1.1.314"
+mypy = "^1.3.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.2"
 
 
 [tool.black]
@@ -48,6 +47,11 @@ include = ["arcworld/*.py", "arcworld/*.pyi"]
 extend-exclude = ["arcworld/deprecated", "arcworld/examples.py"]
 # No rule should be fixed automatically
 fixable = []
+
+[tool.mypy]
+files = "arcworld/*.py"
+exclude = ["arcworld/deprecated", "arcworld/dsl/shape_utils.py"]
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
