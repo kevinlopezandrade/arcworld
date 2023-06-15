@@ -3,7 +3,7 @@ import numpy as np
 import scipy
 
 from arcworld.shape.oop.base import ShapeObject
-from arcworld.transformations.functional.single_shape_transformations import (
+from arcworld.transformations.oop.single_shape_transformations import (
     mirror_horizontal,
     mirror_vertical,
 )

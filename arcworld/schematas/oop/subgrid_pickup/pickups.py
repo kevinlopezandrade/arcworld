@@ -3,13 +3,13 @@ from numpy.typing import NDArray
 
 from arcworld.grid.oop.grid_oop import GridObject
 from arcworld.schematas.oop.subgrid_pickup.base_pickup import SubgridPickup
-from arcworld.transformations.functional.color_cardinality import (
+from arcworld.transformations.oop.color_cardinality import (
     transformations_dict as color_cardinality_transformation_dict,
 )
-from arcworld.transformations.functional.grid_picking import (
+from arcworld.transformations.oop.grid_picking import (
     transformations_dict as grid_picking_transformation_dict,
 )
-from arcworld.transformations.functional.shape_cardinality import (
+from arcworld.transformations.oop.shape_cardinality import (
     transformations_dict as shape_cardinality_transformation_dict,
 )
 
