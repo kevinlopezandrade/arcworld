@@ -37,10 +37,10 @@ class SubgridPickup(metaclass=ABCMeta):
         "median": False,
     }
 
-    DEFAULT_CONDITIONS = [
-        "is_shape_symmetric",
-        "is_shape_evenly_colored",
-        "is_shape_fully_connected",
+    DEFAULT_CONDITIONS: List[ShapesFilter] = [
+        get_filter("is_shape_symmetric"),
+        get_filter("is_shape_evenly_colored"),
+        get_filter("is_shape_fully_connected"),
     ]
 
     def __init__(self) -> None:
@@ -52,13 +52,7 @@ class SubgridPickup(metaclass=ABCMeta):
         Every SubgridPickup can define here their shape conditions or use
         the default ones.
         """
-        conditions: List[ShapesFilter] = []
-
-        for condition_name in self.DEFAULT_CONDITIONS:
-            condition = get_filter(condition_name)
-            conditions.append(condition)
-
-        return conditions
+        ...
 
     def _pre_create_grid_sampler(self) -> SubgridPickupGridSampler:
         """

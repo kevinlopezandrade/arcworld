@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 
 from arcworld.dsl.arc_types import Shapes
+from arcworld.dsl.functional import height, matcher, size, width
 from arcworld.filters.functional.shape_filter import FunctionalFilter, get_filter
 from arcworld.grid.oop.grid_oop import GridObject, to_shape_object
 from arcworld.internal.constants import DoesNotFitError, GridConstructionError
@@ -131,17 +132,21 @@ class SubgridPickupGridSampler:
         filters: List[FunctionalFilter] = []
 
         if rows <= 1:
-            row_cond = get_filter("is_shape_less_than_2_rows")
+            row_cond = FunctionalFilter("is_shape_less_than_2_rows", matcher(height, 2))
             filters.append(row_cond)
         elif rows < 15:
-            row_cond = get_filter("is_shape_less_than_" + str(rows) + "_rows")
+            row_cond = FunctionalFilter(
+                f"is_shape_less_than_{str(rows)}_rows", matcher(height, rows)
+            )
             filters.append(row_cond)
 
         if cols <= 1:
-            col_cond = get_filter("is_shape_less_than_2_cols")
+            col_cond = FunctionalFilter("is_shape_less_than_2_rows", matcher(width, 2))
             filters.append(col_cond)
         elif cols < 15:
-            col_cond = get_filter("is_shape_less_than_" + str(cols) + "_cols")
+            col_cond = FunctionalFilter(
+                f"is_shape_less_than_{str(cols)}_cols", matcher(width, cols)
+            )
             filters.append(col_cond)
 
         n_cells_available = rows * cols
@@ -155,8 +160,9 @@ class SubgridPickupGridSampler:
             cell_cond = get_filter("is_shape_less_than_2_cell")
             filters.append(cell_cond)
         elif ratio_grid_cell_to_shape_cell < 15:
-            cell_cond = get_filter(
-                "is_shape_less_than_" + str(ratio_grid_cell_to_shape_cell) + "_cell"
+            cell_cond = FunctionalFilter(
+                f"is_shape_less_than_{str(ratio_grid_cell_to_shape_cell)}_cell",
+                matcher(size, ratio_grid_cell_to_shape_cell),
             )
             filters.append(cell_cond)
 
@@ -174,18 +180,14 @@ class SubgridPickupGridSampler:
         # Sample Extra Filters
         extra_filters = self._get_max_shape_size_filter(n_shapes_per_grid, grid_size)
 
-        # Ignore the type issues for now.
         for filter in extra_filters:
-            shapes = filter.filter(shapes)  # type: ignore
-
-        # TODO: Fix this hack. And decided which type use for the general interface.
-        shapes_objects = list(to_shape_object(shape) for shape in shapes)
+            shapes = filter.filter(shapes)
 
         if self._resampler is None:
             # Assume the simplest possible resampler.
-            sampled_shapes = random.sample(shapes_objects, n_shapes_per_grid)
+            sampled_shapes = random.sample(shapes, n_shapes_per_grid)
         else:
-            sampled_shapes = self._resampler.resample(shapes_objects, n_shapes_per_grid)
+            sampled_shapes = self._resampler.resample(shapes, n_shapes_per_grid)
 
         # Place the sampled shapes
         h, w = grid_size
@@ -194,7 +196,7 @@ class SubgridPickupGridSampler:
         try:
             for i, s in enumerate(sampled_shapes):
                 # s = make_uniform_color(s, i + 1)
-                grid.place_object(s)
+                grid.place_object(to_shape_object(s))
         except DoesNotFitError:
             raise GridConstructionError(
                 f"Could not place {n_shapes_per_grid} in a grid"
