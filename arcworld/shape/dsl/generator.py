@@ -4,7 +4,7 @@ from typing import List, Optional, cast
 from tqdm import tqdm
 
 from arcworld.dsl.arc_constants import FIVE
-from arcworld.dsl.arc_types import Coordinate, Coordinates, Shapes, arcfrozenset
+from arcworld.dsl.arc_types import Coordinate, Coordinates, Shapes
 from arcworld.dsl.functional import (
     apply,
     both,
@@ -80,7 +80,7 @@ class ShapeGenerator:
     def augmentations(self) -> List[str]:
         return self._augmentations
 
-    def generate_random_proto_shapes(self) -> arcfrozenset[Coordinates]:
+    def generate_random_proto_shapes(self) -> frozenset[Coordinates]:
         """
         Generate an object using random neighbors and augmentations.
         We start at coordinates (0,0) and consider as neighbors evey
@@ -107,7 +107,7 @@ class ShapeGenerator:
             for _ in range(self.max_variations):
                 shape = self._generate_random_proto_shape(num_pixels)
                 # Normalize the shape.
-                norm_shape = normalize(arcfrozenset(shape))
+                norm_shape = normalize(frozenset(shape))
                 norm_shape = cast(Coordinates, norm_shape)
                 random_shapes.add(norm_shape)
                 bar.update()
@@ -126,7 +126,7 @@ class ShapeGenerator:
         final_shapes = augmented_shapes | random_shapes
         print(f"Total augmented shapes: {len(final_shapes)}")
 
-        return arcfrozenset(augmented_shapes | random_shapes)
+        return frozenset(augmented_shapes | random_shapes)
 
     @staticmethod
     def _generate_random_proto_shape(pixel_size: int) -> set[Coordinate]:
@@ -151,6 +151,7 @@ class ShapeGenerator:
         """
         proto_shapes = self.generate_random_proto_shapes()
 
+        print(f"Filtering by max dimension: {max_obj_dimension}")
         # Filter shapes by dimension.
         bounding_function = lbind(greater, max_obj_dimension)
         small_enough = compose(bounding_function, compose(decrement, height))
@@ -160,6 +161,7 @@ class ShapeGenerator:
 
         recoloring_function = lbind(recolor, FIVE)
         shapes = apply(recoloring_function, shapes_filtered)
+        print(f"Final number of shapes: {len(shapes)}")
         # TODO: Until lbin is proprerly type hinted
         # we must use cast.
         shapes = cast(Shapes, shapes)

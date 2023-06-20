@@ -1,0 +1,23 @@
+{
+    "include": [
+        "arcworld",
+        "tests"
+    ],
+    "exclude": [
+        "arcworld/deprecated",
+        "arcworld/examples.py",
+        "arcworld/dsl/shape_utils.py",
+        "arcworld/transformations/oop",
+        "arcworld/shape/oop",
+        "arcworld/internal/point_cloud",
+        "arcworld/filters/functional/single_shape_conditionals.py"
+    ],
+    "strict": [
+        "arcworld",
+        "tests"
+    ],
+    "autoSearchPaths": false,
+    "typeCheckingMode": "strict",
+    "useLibraryCodeForTypes": false,
+    "typeshedPath": "/home/kev/Builds/typeshed"
+}

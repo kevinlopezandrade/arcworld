@@ -7,8 +7,8 @@ import numpy as np
 from arcworld.dsl.arc_types import Shapes
 from arcworld.filters.functional.shape_filter import FunctionalFilter, get_filter
 from arcworld.grid.oop.grid_oop import GridObject, to_shape_object
+from arcworld.internal.constants import DoesNotFitError, GridConstructionError
 from arcworld.schematas.oop.subgrid_pickup.resamplers import Resampler
-from arcworld.shape.oop.base import ShapeObject
 
 
 class SubgridPickupGridSampler:
@@ -162,9 +162,7 @@ class SubgridPickupGridSampler:
 
         return filters
 
-    def _resample_shapes_and_place(
-        self, shapes_objects: List[ShapeObject]
-    ) -> GridObject:
+    def _resample_shapes_and_place(self, shapes: Shapes) -> GridObject:
         """
         Takes a set of shapes and resamples according to some resampler criteria.
         For the moment the resampler criteria is yet to be defined.
@@ -178,7 +176,10 @@ class SubgridPickupGridSampler:
 
         # Ignore the type issues for now.
         for filter in extra_filters:
-            shapes_objects = filter.filter(shapes_objects)  # type: ignore
+            shapes = filter.filter(shapes)  # type: ignore
+
+        # TODO: Fix this hack. And decided which type use for the general interface.
+        shapes_objects = list(to_shape_object(shape) for shape in shapes)
 
         if self._resampler is None:
             # Assume the simplest possible resampler.
@@ -194,9 +195,10 @@ class SubgridPickupGridSampler:
             for i, s in enumerate(sampled_shapes):
                 # s = make_uniform_color(s, i + 1)
                 grid.place_object(s)
-        # TODO: Change general Exception for a more specific one.
-        except Exception:
-            raise ValueError("Error while placing the sampled shapes")
+        except DoesNotFitError:
+            raise GridConstructionError(
+                f"Could not place {n_shapes_per_grid} in a grid"
+            ) from DoesNotFitError
         else:
             # Here by definition of the foor loop, you must
             # have placed 'n_shapes_per_grid' in the grid.
@@ -217,20 +219,18 @@ class SubgridPickupGridSampler:
         # Transform the objects to ShapesObjects as used by Yassine.
         # This set in theory should not work since ShapeObject is not
         # hashable.
-        shapes_objects = list(to_shape_object(shape) for shape in shapes)
+        # shapes_objects = list(to_shape_object(shape) for shape in shapes)
 
         # So I stop either when I ran out of trials or when I placed n_objects.
 
         trial = 0
         while trial < max_trials:
-            print(f"Attempting trial: {trial}")
             try:
-                sampled_grid = self._resample_shapes_and_place(shapes_objects)
-            # TODO: Change general Exception for a more specific one.
-            except Exception:
+                sampled_grid = self._resample_shapes_and_place(shapes)
+            except (GridConstructionError, Exception):
                 trial += 1
             else:
                 return sampled_grid
 
         # TODO: Raise a more specifi exception.
-        raise ValueError
+        raise RuntimeError(f"{max_trials} trials without a grid.")

@@ -1,6 +1,6 @@
 import numpy as np
 
-from arcworld.internal.constants import ShapeOutOfBounds
+from arcworld.internal.constants import ShapeOutOfBoundsError
 
 
 def pc_to_full_sized_grid(pc, n_cols=30, n_rows=30) -> np.ndarray:
@@ -9,7 +9,7 @@ def pc_to_full_sized_grid(pc, n_cols=30, n_rows=30) -> np.ndarray:
         for idx, color in pc.items():
             grid[idx] = color
     except IndexError:
-        raise ShapeOutOfBounds(
+        raise ShapeOutOfBoundsError(
             f"Can not convert this pc into a grid of size ({n_cols}, {n_rows})"
         )
     return grid

@@ -22,9 +22,13 @@ COLORMAP = colors.ListedColormap(
 NORM = colors.Normalize(vmin=0, vmax=9)
 
 
-class DoesNotFitException(Exception):
+class DoesNotFitError(Exception):
     pass
 
 
-class ShapeOutOfBounds(Exception):
+class ShapeOutOfBoundsError(Exception):
+    pass
+
+
+class GridConstructionError(RuntimeError):
     pass

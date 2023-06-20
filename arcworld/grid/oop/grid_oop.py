@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 from arcworld.dsl.arc_types import Shape
 from arcworld.dsl.functional import normalize
-from arcworld.internal.constants import DoesNotFitException
+from arcworld.internal.constants import DoesNotFitError
 from arcworld.shape.oop.base import ShapeObject
 from arcworld.shape.oop.utils import grid_to_cropped_grid, grid_to_pc, shift_indexes
 
@@ -80,7 +80,7 @@ class GridObject:
             positions = self._find_possible_positions(zeroedworld, shape.grid)
 
         if len(positions) == 0:
-            raise DoesNotFitException("Shape does not fit")
+            raise DoesNotFitError("Shape does not fit")
 
         position = random.choice(positions)
         shape.move_to_position(position)

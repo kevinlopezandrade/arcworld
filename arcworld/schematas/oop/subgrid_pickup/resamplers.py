@@ -76,6 +76,10 @@ class UniqueShapeParemeter(Resampler):
         self.param = param
         self.max_trials = max_trials
 
+        # TODO: Hack because inconsistency in ShapeObject.
+        if self.param == "n_cells":
+            self.param = "num_points"
+
     def _get_param(self, shape: ShapeObject) -> int:
         return cast(int, getattr(shape, self.param))
 

@@ -1,3 +1,5 @@
+from typing import Dict, Type
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -295,7 +297,7 @@ class WholeGrid(SubgridPickup):
         return grid.grid
 
 
-SUBGRID_PICKUP_DICT = {
+SUBGRID_PICKUP_DICT: Dict[str, Type[SubgridPickup]] = {
     "select_shape_with_most_cells": ShapeMostCells,
     "select_shape_with_least_cells": ShapeLeastCells,
     "select_shape_with_median_cells": ShapeMedianCells,

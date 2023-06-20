@@ -1,8 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Set
+from typing import List
+
+import numpy as np
+from numpy.typing import NDArray
 
 from arcworld.dsl.arc_types import Shapes
-from arcworld.grid.grid_protocol import GridProtocol
 
 
 class ObjectsTransform(metaclass=ABCMeta):
@@ -22,6 +24,6 @@ class GridTransform(metaclass=ABCMeta):
 
     @abstractmethod
     def transform(
-        self, grids: Set[GridProtocol], seed: Optional[int] = None
-    ) -> Set[GridProtocol]:
+        self, grids: List[NDArray[np.float64]], seed: int
+    ) -> List[NDArray[np.float64]]:
         pass

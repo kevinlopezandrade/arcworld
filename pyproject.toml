@@ -43,14 +43,15 @@ line-length = 88
 src = ["arcworld"]
 select = ["E", "F", "W", "N", "E266", "E262"]
 ignore = ["N812"]
-include = ["arcworld/*.py", "arcworld/*.pyi", "tests/*.py"]
+include = ["arcworld/*.py", "arcworld/*.pyi", "tests/*.py", "tests.*pyi"]
 extend-exclude = ["arcworld/deprecated", "arcworld/examples.py"]
 # No rule should be fixed automatically
 fixable = []
 
 [tool.mypy]
-files = "arcworld/*.py"
+files = "arcworld/*.pyi?$"
 exclude = ["arcworld/deprecated", "arcworld/dsl/shape_utils.py"]
+custom_typeshed_dir = "/home/kev/Builds/typeshed"
 
 
 [build-system]
