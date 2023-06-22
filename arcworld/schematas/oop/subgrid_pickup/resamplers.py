@@ -1,9 +1,12 @@
+import logging
 import random
 from abc import ABCMeta, abstractmethod
 from typing import List, Tuple
 
 from arcworld.dsl.arc_types import Shape, Shapes
 from arcworld.dsl.functional import height, size, width
+
+logger = logging.getLogger(__name__)
 
 
 def range_c(start: int, end: int):
@@ -73,10 +76,6 @@ class UniqueShapeParemeter(Resampler):
         self.param = param
         self.max_trials = max_trials
 
-        # TODO: Hack because inconsistency in ShapeObject.
-        if self.param == "n_cells":
-            self.param = "num_points"
-
     def _get_param(self, shape: Shape) -> int:
         if self.param == "n_rows":
             return height(shape)
@@ -99,7 +98,7 @@ class UniqueShapeParemeter(Resampler):
         index = 1
         while (
             len(selected_shapes) < n_shapes_per_grid
-            and index < len(shapes_list)
+            and index < len(indices)
             and index < self.max_trials
         ):
             candidate_shape = shapes_list[indices[index]]

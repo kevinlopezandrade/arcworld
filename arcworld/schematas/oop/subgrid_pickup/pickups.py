@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Dict, List, Type
 
 import numpy as np
 from numpy.typing import NDArray
@@ -323,3 +323,5 @@ SUBGRID_PICKUP_DICT: Dict[str, Type[SubgridPickup]] = {
     "crop_to_shape": CropToShape,
     "select_whole_grid": WholeGrid,
 }
+
+DEFAULT_PICKUPS: List[Type[SubgridPickup]] = list(SUBGRID_PICKUP_DICT.values())

@@ -1,15 +1,19 @@
+import logging
 import random
 import time
 from typing import List, Optional, Tuple
 
 import numpy as np
 
+from arcworld.dsl.arc_constants import TWO
 from arcworld.dsl.arc_types import Shapes
-from arcworld.dsl.functional import height, matcher, size, width
+from arcworld.dsl.functional import compose, greater, height, lbind, size, width
 from arcworld.filters.functional.shape_filter import FunctionalFilter, get_filter
 from arcworld.grid.oop.grid_oop import GridObject, to_shape_object
 from arcworld.internal.constants import DoesNotFitError, GridConstructionError
 from arcworld.schematas.oop.subgrid_pickup.resamplers import Resampler
+
+logger = logging.getLogger(__name__)
 
 
 class SubgridPickupGridSampler:
@@ -88,9 +92,9 @@ class SubgridPickupGridSampler:
         min_grid_cols, max_grid_cols = self.grid_cols_range
 
         if self.same_grid_size_accross_tasks:
-            example_seed = int(time.time() * 1000)
-        else:
             example_seed = self._fixed_cross_example_seed
+        else:
+            example_seed = int(time.time() * 1000)
 
         if self.grid_size_even is not None:
             if self.grid_size_even:
@@ -132,20 +136,24 @@ class SubgridPickupGridSampler:
         filters: List[FunctionalFilter] = []
 
         if rows <= 1:
-            row_cond = FunctionalFilter("is_shape_less_than_2_rows", matcher(height, 2))
+            boundary = compose(lbind(greater, TWO), height)
+            row_cond = FunctionalFilter("is_shape_less_than_2_rows", boundary)
             filters.append(row_cond)
         elif rows < 15:
+            boundary = compose(lbind(greater, rows), height)
             row_cond = FunctionalFilter(
-                f"is_shape_less_than_{str(rows)}_rows", matcher(height, rows)
+                f"is_shape_less_than_{str(rows)}_rows", boundary
             )
             filters.append(row_cond)
 
         if cols <= 1:
-            col_cond = FunctionalFilter("is_shape_less_than_2_rows", matcher(width, 2))
+            boundary = compose(lbind(greater, TWO), width)
+            col_cond = FunctionalFilter("is_shape_less_than_2_cols", boundary)
             filters.append(col_cond)
         elif cols < 15:
+            boundary = compose(lbind(greater, cols), width)
             col_cond = FunctionalFilter(
-                f"is_shape_less_than_{str(cols)}_cols", matcher(width, cols)
+                f"is_shape_less_than_{str(cols)}_cols", boundary
             )
             filters.append(col_cond)
 
@@ -160,9 +168,10 @@ class SubgridPickupGridSampler:
             cell_cond = get_filter("is_shape_less_than_2_cell")
             filters.append(cell_cond)
         elif ratio_grid_cell_to_shape_cell < 15:
+            boundary = compose(lbind(greater, ratio_grid_cell_to_shape_cell), size)
             cell_cond = FunctionalFilter(
                 f"is_shape_less_than_{str(ratio_grid_cell_to_shape_cell)}_cell",
-                matcher(size, ratio_grid_cell_to_shape_cell),
+                boundary,
             )
             filters.append(cell_cond)
 
@@ -183,56 +192,50 @@ class SubgridPickupGridSampler:
         for filter in extra_filters:
             shapes = filter.filter(shapes)
 
+        if len(shapes) == 0:
+            raise GridConstructionError("No shapes to be placed after filtering")
+
+        logger.debug(f"Len after extra filters: {len(shapes)}")
+
         if self._resampler is None:
             # Assume the simplest possible resampler.
             sampled_shapes = random.sample(shapes, n_shapes_per_grid)
         else:
             sampled_shapes = self._resampler.resample(shapes, n_shapes_per_grid)
 
+        logger.debug(f"Resampled shapes {len(sampled_shapes)}")
         # Place the sampled shapes
         h, w = grid_size
         grid = GridObject(h, w)
 
         try:
-            for i, s in enumerate(sampled_shapes):
-                # s = make_uniform_color(s, i + 1)
+            for s in sampled_shapes:
                 grid.place_object(to_shape_object(s))
         except DoesNotFitError:
             raise GridConstructionError(
-                f"Could not place {n_shapes_per_grid} in a grid"
+                f"Could not place {n_shapes_per_grid} sampled shapes in the grid"
             ) from DoesNotFitError
         else:
             # Here by definition of the foor loop, you must
             # have placed 'n_shapes_per_grid' in the grid.
             # Otherwise it should have failed.
+            assert len(grid.shapes) == n_shapes_per_grid
+
             return grid
 
     def sample_input_grid(self, shapes: Shapes, max_trials: int = 20) -> GridObject:
-        """
-        Here we perform the initial placement of objects.
-
-        As Per Yassine here is where he defines the filter programs.
-        It would be nice here to use Yassine Filters to proof the
-        interoperability between Michael and Yassine filters.
-
-        For that I need to pass from shapes to the actual object Shape.
-        Before this method though I can use normal DSL filters as well.
-        """
-        # Transform the objects to ShapesObjects as used by Yassine.
-        # This set in theory should not work since ShapeObject is not
-        # hashable.
-        # shapes_objects = list(to_shape_object(shape) for shape in shapes)
-
-        # So I stop either when I ran out of trials or when I placed n_objects.
-
         trial = 0
         while trial < max_trials:
+            logger.debug(f"Attempting trial {trial}")
             try:
                 sampled_grid = self._resample_shapes_and_place(shapes)
-            except (GridConstructionError, Exception):
+            except GridConstructionError as e:
+                logger.debug(f"Trial {trial} failed: {e}")
+                trial += 1
+            except Exception as e:
+                logger.debug(f"Trial {trial} failed: Unknow exception {e}")
                 trial += 1
             else:
                 return sampled_grid
 
-        # TODO: Raise a more specifi exception.
-        raise RuntimeError(f"{max_trials} trials without a grid.")
+        raise GridConstructionError(f"{max_trials} trials without a a valid grid.")

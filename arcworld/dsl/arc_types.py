@@ -17,7 +17,7 @@ _T_contra = TypeVar("_T_contra", contravariant=True)
 
 
 # Custom Protocol
-class IterableContainer(Iterable[_T], Container[_T], Sized, Protocol):
+class IterableContainer(Iterable[_T], Container[_T], Sized, Protocol[_T]):
     # We define init here to make it compatible with the current containers.
     def __init__(self, __iterable: Iterable[_T]) -> None:
         ...
@@ -62,6 +62,7 @@ Shape = frozenset[Cell]
 Shapes = frozenset[Shape]
 
 Coordinates = frozenset[Coordinate]
+
 IndicesSet = frozenset[Coordinates]
 
 Patch = Union[Shape, Coordinates]

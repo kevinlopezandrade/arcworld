@@ -1,6 +1,8 @@
 from typing import Callable, cast
 
-from arcworld.dsl.arc_types import Shapes
+from tqdm import tqdm
+
+from arcworld.dsl.arc_types import Shape, Shapes
 from arcworld.filters.functional.single_shape_conditionals import CONDITIONALS
 from arcworld.filters.objects_filter import ShapesFilter
 from arcworld.grid.oop.grid_oop import to_shape_object
@@ -19,10 +21,19 @@ class FunctionalFilter(ShapesFilter):
     def name(self) -> str:
         return self._name
 
-    def filter(self, objects: Shapes) -> Shapes:
-        res: Shapes = set()
+    def filter(self, objects: Shapes, silent: bool = True) -> Shapes:
+        res: set[Shape] = set()
 
-        for shape in objects:
+        if silent:
+            iterator = objects
+        else:
+            iterator = tqdm(
+                objects,
+                desc=f"Filtering shapes with {self.name}",
+                bar_format=ShapesFilter.BAR_FORMAT,
+            )
+
+        for shape in iterator:
             aux = shape
 
             if self._to_shape_object:
@@ -31,7 +42,7 @@ class FunctionalFilter(ShapesFilter):
             if self._func(aux):
                 res.add(shape)
 
-        return res
+        return frozenset(res)
 
 
 def get_filter(name: str) -> FunctionalFilter:

@@ -1,19 +1,18 @@
 import random
-from typing import List, Tuple, cast
+from typing import List, Tuple
 
 import numpy as np
 import scipy
 from numpy.typing import NDArray
 
 from arcworld.dsl.arc_types import Shape
-from arcworld.dsl.functional import normalize
 from arcworld.internal.constants import DoesNotFitError
 from arcworld.shape.oop.base import ShapeObject
 from arcworld.shape.oop.utils import grid_to_cropped_grid, grid_to_pc, shift_indexes
 
 
 def to_shape_object(shape: Shape) -> ShapeObject:
-    shape = cast(Shape, normalize(shape))  # Cast because of union type.
+    # shape = cast(Shape, normalize(shape))  # Cast because of union type.
     point_cloud = {}
 
     for color, (x, y) in shape:

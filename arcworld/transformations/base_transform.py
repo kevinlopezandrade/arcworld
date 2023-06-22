@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from arcworld.dsl.arc_types import Shapes
 
 
-class ObjectsTransform(metaclass=ABCMeta):
+class ShapesTransform(metaclass=ABCMeta):
     """
     Interface for every object transform
     """
@@ -17,10 +17,15 @@ class ObjectsTransform(metaclass=ABCMeta):
         pass
 
 
-class GridTransform(metaclass=ABCMeta):
+class GridsTransform(metaclass=ABCMeta):
     """
     Interface for evey grid transform
     """
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
 
     @abstractmethod
     def transform(

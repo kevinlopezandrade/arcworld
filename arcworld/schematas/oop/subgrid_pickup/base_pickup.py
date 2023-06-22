@@ -4,9 +4,11 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from arcworld.filters.dsl.dsl_filter import DSLFilter
 from arcworld.filters.functional.shape_filter import get_filter
 from arcworld.filters.objects_filter import ShapesFilter
 from arcworld.grid.oop.grid_oop import GridObject
+from arcworld.internal.program import FilterProgram
 from arcworld.schematas.oop.subgrid_pickup.resamplers import (
     OnlyShapesRepeated,
     RepeatedShapesResampler,
@@ -14,6 +16,11 @@ from arcworld.schematas.oop.subgrid_pickup.resamplers import (
 )
 from arcworld.schematas.oop.subgrid_pickup.subgrid_pickup_sampler import (
     SubgridPickupGridSampler,
+)
+
+SymmetricDef = (
+    "Symmetric",
+    "fork(either, fork(either, fork(equality, compose(toindices, dmirror), toindices), fork(equality, compose(toindices, cmirror), toindices)), fork(either, fork(equality, compose(toindices, vmirror), toindices), fork(equality, compose(toindices, hmirror), toindices)))",  # noqa
 )
 
 
@@ -38,7 +45,7 @@ class SubgridPickup(metaclass=ABCMeta):
     }
 
     DEFAULT_CONDITIONS: List[ShapesFilter] = [
-        get_filter("is_shape_symmetric"),
+        DSLFilter(FilterProgram(*SymmetricDef)),
         get_filter("is_shape_evenly_colored"),
         get_filter("is_shape_fully_connected"),
     ]
@@ -53,6 +60,10 @@ class SubgridPickup(metaclass=ABCMeta):
         the default ones.
         """
         ...
+
+    @property
+    def name(self) -> str:
+        return self.__class__.__name__
 
     def _pre_create_grid_sampler(self) -> SubgridPickupGridSampler:
         """
@@ -115,8 +126,15 @@ class SubgridPickup(metaclass=ABCMeta):
 
     def create_grid_sampler(self) -> SubgridPickupGridSampler:
         """
+        Creates a SubgridPickupGridSampler object that will
+        allow to sample input grids already satisying the
+        constraints of the SubgridPickup.
+
         User is not assumed to overload this method, for that
         purpose use _pre_create_grid_sampler or _add_resampler
+
+        Returns:
+            SubgridPickupGridSampler
         """
         grid_sampler = self._pre_create_grid_sampler()
         self._add_resampler(grid_sampler)
