@@ -1,0 +1,2 @@
+datasets/shapes.pickle filter=lfs diff=lfs merge=lfs -text
+datasets/proto_shapes.pickle filter=lfs diff=lfs merge=lfs -text

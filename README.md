@@ -49,3 +49,11 @@ and install the hooks before attemping to push any commit:
 ```shell
 $ pre-commit install
 ```
+
+## Datasets
+We can generate random shapes on the fly by using the ShapeGeneratorDSL class
+or instead load them from a file with stored shapes using either
+ShapeGeneratorFromFile or ShapeGeneratorFromProtoFile.
+
+Default datasets are provided, but in order to use them you need to install
+[git-lfs](https://github.com/git-lfs/git-lfs).
