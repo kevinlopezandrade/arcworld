@@ -19,7 +19,9 @@ class SubgridPickupTaskGenerator:
     """
 
     def __init__(
-        self, pickups: List[Type[SubgridPickup]], alterations: List[GridsTransform]
+        self,
+        pickups: List[Type[SubgridPickup]],
+        alterations: List[Type[GridsTransform]],
     ) -> None:
         """
         Args:
@@ -85,9 +87,11 @@ class SubgridPickupTaskGenerator:
 
         for i in iterator:
             pickup = random.choice(self.pickups)()
-            alteration = random.choice(self.alterations)
+            alteration = random.choice(self.alterations)()
 
-            logger.debug(f"Generating sample {i}")
+            logger.debug(
+                f"Generating sample {i}, with {pickup.name}, {alteration.name}"
+            )
             try:
                 sample = self._generate_sample(shapes, pickup, alteration, n_tasks)
             except Exception:

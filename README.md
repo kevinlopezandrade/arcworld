@@ -57,3 +57,6 @@ ShapeGeneratorFromFile or ShapeGeneratorFromProtoFile.
 
 Default datasets are provided, but in order to use them you need to install
 [git-lfs](https://github.com/git-lfs/git-lfs).
+
+## Examples
+Python scripts with examples can be found in the *examples/* directory.

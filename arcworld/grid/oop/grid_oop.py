@@ -30,13 +30,16 @@ def make_uniform_color(shape: ShapeObject, color: int) -> ShapeObject:
 
 
 class GridObject:
-    def __init__(self, h: int, w: int) -> None:
+    def __init__(
+        self, h: int, w: int, background: int = 0, allow_touching_objects: bool = False
+    ) -> None:
         self._h = h
         self._w = w
-        self._grid_shape = (h, w)
-        # TODO: Check if I can deifine this as a np.uint8
-        self._grid = np.zeros(shape=self._grid_shape)
+        self._background = background
+        self._allow_touching_objects = allow_touching_objects
 
+        self._grid_shape = (h, w)
+        self._grid = np.zeros(shape=self._grid_shape, dtype=np.int8)
         self._shapes: List[ShapeObject] = []
 
     @property
@@ -52,7 +55,11 @@ class GridObject:
         return self._grid_shape
 
     @property
-    def grid(self) -> NDArray[np.float64]:
+    def background(self) -> int:
+        return self._background
+
+    @property
+    def grid(self) -> NDArray[np.int8]:
         return self._grid
 
     @property
@@ -62,15 +69,13 @@ class GridObject:
     def place_object(
         self,
         shape: ShapeObject,
-        background: int = 0,
-        allow_touching_objects: bool = False,
     ) -> ShapeObject:
         """Randomly chooses position for the shape in the grid"""
         shape = ShapeObject(shape)
         zeroedworld = self.grid.copy()
-        zeroedworld[self.grid == background] = 0
+        zeroedworld[self.grid == self.background] = 0
 
-        if not allow_touching_objects:
+        if not self._allow_touching_objects:
             dilated_shape = scipy.ndimage.morphology.binary_dilation(
                 shape.grid, structure=scipy.ndimage.generate_binary_structure(2, 2)
             ).astype(int)

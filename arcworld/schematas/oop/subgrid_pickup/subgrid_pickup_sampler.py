@@ -204,6 +204,13 @@ class SubgridPickupGridSampler:
             sampled_shapes = self._resampler.resample(shapes, n_shapes_per_grid)
 
         logger.debug(f"Resampled shapes {len(sampled_shapes)}")
+
+        if len(sampled_shapes) != n_shapes_per_grid:
+            raise GridConstructionError(
+                f"Number of resampled shapes is different from"
+                f"the desired {n_shapes_per_grid}"
+            )
+
         # Place the sampled shapes
         h, w = grid_size
         grid = GridObject(h, w)

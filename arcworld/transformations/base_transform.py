@@ -23,12 +23,11 @@ class GridsTransform(metaclass=ABCMeta):
     """
 
     @property
-    @abstractmethod
     def name(self) -> str:
-        pass
+        return self.__class__.__name__
 
     @abstractmethod
     def transform(
-        self, grids: List[NDArray[np.float64]], seed: int
-    ) -> List[NDArray[np.float64]]:
+        self, grids: List[NDArray[np.int8]], seed: int
+    ) -> List[NDArray[np.int8]]:
         pass

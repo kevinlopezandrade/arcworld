@@ -97,7 +97,7 @@ def duplicate_grid_4_times_2by2(grid, fixed_task_seed):
 
 
 PICKUP_ALTERATIONS = cast(
-    Dict[str, Callable[[NDArray[np.float64], int], NDArray[np.float64]]],
+    Dict[str, Callable[[NDArray[np.int8], int], NDArray[np.int8]]],
     {
         "show_as_is": show_as_is,
         "duplicate_grid_4_times_2by2": duplicate_grid_4_times_2by2,
