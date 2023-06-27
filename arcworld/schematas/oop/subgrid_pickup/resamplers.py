@@ -158,6 +158,10 @@ class RepeatedShapesResampler(Resampler):
         if (n - p1) % 2 == 0:
             valid_numbers = valid_numbers - {int((n - p1) / 2)}
 
+        # TODO: Resampling failed.
+        if len(valid_numbers) == 0:
+            raise RuntimeError("Resampling failed")
+
         # Sample second number and compute remainder.
         p2 = random.choice(list(valid_numbers))
         p3 = (n - p1) - p2

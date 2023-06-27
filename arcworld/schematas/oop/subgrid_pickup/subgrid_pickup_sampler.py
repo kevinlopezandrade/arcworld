@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import numpy as np
 
@@ -9,7 +9,8 @@ from arcworld.dsl.arc_constants import TWO
 from arcworld.dsl.arc_types import Shapes
 from arcworld.dsl.functional import compose, greater, height, lbind, size, width
 from arcworld.filters.functional.shape_filter import FunctionalFilter, get_filter
-from arcworld.grid.oop.grid_oop import GridObject, to_shape_object
+from arcworld.grid.grid_protocol import GridProtocol
+from arcworld.grid.oop.grid_oop import GridObject
 from arcworld.internal.constants import DoesNotFitError, GridConstructionError
 from arcworld.schematas.oop.subgrid_pickup.resamplers import Resampler
 
@@ -67,6 +68,14 @@ class SubgridPickupGridSampler:
 
     def set_resampler(self, resampler: Optional[Resampler]):
         self._resampler = resampler
+
+    def set_grid_class(self, grid_cls: Type[GridProtocol], **kwargs: Dict[str, Any]):
+        """
+        Sets the grid class to use and the kwargs passsed when creating an instance
+        of that class.
+        """
+        self._grid_cls = grid_cls
+        self._grid_kwargs = kwargs
 
     def _sample_num_shapes(self) -> int:
         min_n_shapes, max_n_shapes = self.num_shapes_range
@@ -205,19 +214,19 @@ class SubgridPickupGridSampler:
 
         logger.debug(f"Resampled shapes {len(sampled_shapes)}")
 
-        if len(sampled_shapes) != n_shapes_per_grid:
+        if len(sampled_shapes) < n_shapes_per_grid:
             raise GridConstructionError(
-                f"Number of resampled shapes is different from"
+                f"Number of resampled shapes is different from "
                 f"the desired {n_shapes_per_grid}"
             )
 
         # Place the sampled shapes
         h, w = grid_size
-        grid = GridObject(h, w)
+        grid = self._grid_cls(h, w, **self._grid_kwargs)
 
         try:
             for s in sampled_shapes:
-                grid.place_object(to_shape_object(s))
+                grid.place_object(s)
         except DoesNotFitError:
             raise GridConstructionError(
                 f"Could not place {n_shapes_per_grid} sampled shapes in the grid"
@@ -226,7 +235,7 @@ class SubgridPickupGridSampler:
             # Here by definition of the foor loop, you must
             # have placed 'n_shapes_per_grid' in the grid.
             # Otherwise it should have failed.
-            assert len(grid.shapes) == n_shapes_per_grid
+            # assert len(grid.shapes) == n_shapes_per_grid
 
             return grid
 

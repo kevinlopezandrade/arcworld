@@ -68,27 +68,27 @@ class GridObject:
 
     def place_object(
         self,
-        shape: ShapeObject,
+        shape: Shape,
     ) -> ShapeObject:
         """Randomly chooses position for the shape in the grid"""
-        shape = ShapeObject(shape)
+        shape_obj = to_shape_object(shape)
         zeroedworld = self.grid.copy()
         zeroedworld[self.grid == self.background] = 0
 
         if not self._allow_touching_objects:
             dilated_shape = scipy.ndimage.morphology.binary_dilation(
-                shape.grid, structure=scipy.ndimage.generate_binary_structure(2, 2)
+                shape_obj.grid, structure=scipy.ndimage.generate_binary_structure(2, 2)
             ).astype(int)
             positions = self._find_possible_positions(zeroedworld, dilated_shape)
         else:
-            positions = self._find_possible_positions(zeroedworld, shape.grid)
+            positions = self._find_possible_positions(zeroedworld, shape_obj.grid)
 
         if len(positions) == 0:
             raise DoesNotFitError("Shape does not fit")
 
         position = random.choice(positions)
-        shape.move_to_position(position)
-        shape_grid_at_world_size = shape.grid[
+        shape_obj.move_to_position(position)
+        shape_grid_at_world_size = shape_obj.grid[
             : self.grid.shape[0], : self.grid.shape[1]
         ]
 
@@ -98,9 +98,9 @@ class GridObject:
         ]
 
         # Update the objects list.
-        self._shapes.append(shape)
+        self._shapes.append(shape_obj)
 
-        return shape
+        return shape_obj
 
     @staticmethod
     def _find_possible_positions(

@@ -38,7 +38,7 @@ class GridDSL:
         self._grid_shape = (h, w)
 
         self._grid: Grid = canvas(background_color, (h, w))
-        self._free_locations: set[Coordinate] = get_locations(
+        self._free_locations: frozenset[Coordinate] = get_locations(
             (h, w), max_obj_dimension, margin, 2
         )
 
@@ -62,11 +62,11 @@ class GridDSL:
         return tuple(self._objects)
 
     @property
-    def free_locations(self) -> set[Coordinate]:
+    def free_locations(self) -> frozenset[Coordinate]:
         return self._free_locations
 
     @free_locations.setter
-    def free_locations(self, value: set[Coordinate]):
+    def free_locations(self, value: frozenset[Coordinate]):
         self._free_locations = value
 
     @property
@@ -93,7 +93,7 @@ class GridDSL:
     def palette_schemes(self) -> Any:
         return self._palette_schemes
 
-    def prune_locations(self, obj: Shape):
+    def _prune_locations(self, obj: Shape):
         """
         Basically prunes the avalaible locations
         given an object coordinates.
@@ -141,6 +141,6 @@ class GridDSL:
         self._objects.append(obj)
 
         # Update the available locations.
-        self.prune_locations(obj)
+        self._prune_locations(obj)
 
         return obj

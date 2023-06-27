@@ -5,6 +5,8 @@ from typing import List, Type
 from tqdm import tqdm
 
 from arcworld.dsl.arc_types import Shapes
+from arcworld.grid.oop.grid_bruteforce import GridBruteForce
+from arcworld.grid.oop.grid_oop import GridObject  # noqa
 from arcworld.schematas.oop.subgrid_pickup.base_pickup import SubgridPickup
 from arcworld.shape.base_generator import ShapeGenerator
 from arcworld.transformations.base_transform import GridsTransform
@@ -48,6 +50,7 @@ class SubgridPickupTaskGenerator:
     ):
         sample = []
         grid_sampler = pickup.create_grid_sampler()
+        grid_sampler.set_grid_class(GridBruteForce, margin=1)
 
         for i in range(n_tasks):
             logger.debug(f"Trying to generate task {i}")
@@ -94,8 +97,8 @@ class SubgridPickupTaskGenerator:
             )
             try:
                 sample = self._generate_sample(shapes, pickup, alteration, n_tasks)
-            except Exception:
-                logger.debug(f"Could not generate sample {i}")
+            except Exception as e:
+                logger.info(f"Could not generate sample {i}: {e.with_traceback}")
             else:
                 logger.debug(
                     f"Generated sample {i}, with {pickup.name}, {alteration.name}"
