@@ -193,7 +193,7 @@ class RepeatedShapesResampler(Resampler):
 
         freq = (p, n - p)
 
-        assert sum(freq) == p
+        assert sum(freq) == n
 
         return freq
 

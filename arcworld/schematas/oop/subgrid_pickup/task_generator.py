@@ -98,7 +98,7 @@ class SubgridPickupTaskGenerator:
             try:
                 sample = self._generate_sample(shapes, pickup, alteration, n_tasks)
             except Exception as e:
-                logger.info(f"Could not generate sample {i}: {e.with_traceback}")
+                logger.exception(f"Could not generate sample {i}: {e}")
             else:
                 logger.debug(
                     f"Generated sample {i}, with {pickup.name}, {alteration.name}"

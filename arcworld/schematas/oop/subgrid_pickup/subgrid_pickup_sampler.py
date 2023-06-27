@@ -249,7 +249,8 @@ class SubgridPickupGridSampler:
                 logger.debug(f"Trial {trial} failed: {e}")
                 trial += 1
             except Exception as e:
-                logger.debug(f"Trial {trial} failed: Unknow exception {e}")
+                logger.debug(f"Trial {trial} failed")
+                logger.exception(e)
                 trial += 1
             else:
                 return sampled_grid
