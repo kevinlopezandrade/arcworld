@@ -1,3 +1,6 @@
+import json
+import os
+
 import matplotlib.pyplot as plt
 
 from arcworld.dsl.arc_types import Coordinates, Grid, Shape
@@ -56,5 +59,52 @@ def plot_grid(grid: Grid):
     axe.set_yticks(x - 0.5 for x in range(height(grid)))
     axe.set_yticklabels([])
     axe.set_xticklabels([])
+
+    plt.show()
+
+
+def plot_json_task(file_path: str):
+    """
+    Plots a task in the json format given by the original ARC dataset.
+    Args:
+        file: Path to the json file containing the task.
+    """
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    n_train = len(data["train"])
+    samples = data["train"] + data["test"]
+
+    fig, axes = plt.subplots(2, len(samples))
+
+    for i, subtask in enumerate(samples):
+        for j, grid in enumerate([subtask["input"], subtask["output"]]):
+            h = len(grid)
+            w = len(grid[0])
+
+            title = ""
+
+            if i < n_train:
+                if j == 0:
+                    title += f"input {i}"
+                else:
+                    title += f"output {i}"
+            else:
+                if j == 0:
+                    title += "test input"
+                else:
+                    title += "test output"
+
+            axes[j, i].imshow(grid, cmap=COLORMAP, norm=NORM)
+            axes[j, i].grid(True, which="both", color="lightgrey", linewidth=0.5)
+            axes[j, i].set_xticks([x - 0.5 for x in range(w)])
+            axes[j, i].set_yticks([x - 0.5 for x in range(h)])
+            axes[j, i].set_yticklabels([])
+            axes[j, i].set_xticklabels([])
+
+            axes[j, i].set_title(title)
+
+    fig.suptitle(f"{os.path.basename(file_path)}")
 
     plt.show()
