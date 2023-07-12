@@ -64,7 +64,7 @@ class ShapeGeneratorDSL:
                 generated with that fixed pixel size.
             max_obj_dimension: After generating the random shapes with augmentations,
                 max_obj_dimension to filter the shapes. If None no filtering is applied.
-                Therfore no guarantee in the maximum dimension of the shapes.
+                Therefore no guarantee in the maximum dimension of the shapes.
             augmentations: List of augmentations to apply. If None then
                 the default set of augmentations is used.
         """

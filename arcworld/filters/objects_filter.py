@@ -5,7 +5,7 @@ from arcworld.dsl.arc_types import Shapes
 
 class ShapesFilter(metaclass=ABCMeta):
     """
-    Interface for every object filterer.
+    Interface for every shape filterer.
     """
 
     BAR_FORMAT = (

@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import List
+from typing import Any, List
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,6 +14,20 @@ class ShapesTransform(metaclass=ABCMeta):
 
     @abstractmethod
     def transform(self, objects: Shapes) -> Shapes:
+        pass
+
+
+class GridsNewTransform(metaclass=ABCMeta):
+    """
+    Interace for every grid transform
+    """
+
+    @property
+    def name(self) -> str:
+        return self.__class__.__name__
+
+    @abstractmethod
+    def transform(self, grid) -> Any:
         pass
 
 

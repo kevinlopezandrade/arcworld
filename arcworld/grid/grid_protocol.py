@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Dict, List, Protocol, TypeVar
+from typing import Any, List, Protocol, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -13,17 +13,22 @@ _S = TypeVar("_S", Grid, NDArray[np.int8])
 
 # Define the Grid Protocol
 class GridProtocol(Protocol):
-    def __init__(self, h: int, w: int, **kwargs: Dict[str, Any]) -> None:
-        super().__init__()
-
     @property
-    def grid(self) -> Grid:
+    def height(self) -> int:
         ...
 
     @property
-    def shapes(self) -> List[_T]:
+    def width(self) -> int:
+        ...
+
+    @property
+    def grid(self) -> Any:
+        ...
+
+    @property
+    def shapes(self) -> List[Any]:
         ...
 
     @abstractmethod
-    def place_object(self, shape: _T) -> _T:
+    def place_object(self, shape: Any) -> Any:
         ...

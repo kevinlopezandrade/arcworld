@@ -1,24 +1,30 @@
 import json
 import os
+from typing import cast
 
 import matplotlib.pyplot as plt
+import numpy as np
+from numpy.typing import NDArray
 
-from arcworld.dsl.arc_types import Coordinates, Grid, Shape
-from arcworld.dsl.functional import canvas, height, paint, recolor, width
+from arcworld.dsl.arc_types import Coordinates, Shape
+from arcworld.dsl.functional import canvas, height, normalize, paint, recolor, width
 from arcworld.internal.constants import COLORMAP, NORM
 
 
 def plot_shape(shape: Shape):
-    h = height(shape) * 2
-    w = width(shape) * 2
+    shape = cast(Shape, normalize(shape))
+    h = height(shape)
+    w = width(shape)
     grid = canvas(0, (h, w))
     grid = paint(grid, shape)
 
     fig, axe = plt.subplots()
     axe.imshow(grid, cmap=COLORMAP, norm=NORM)
     axe.grid(True, which="both", color="lightgrey", linewidth=0.5)
-    axe.set_xticks(x - 0.5 for x in range(width(shape)))
-    axe.set_yticks(x - 0.5 for x in range(height(shape)))
+    # axe.set_xticks([x - 0.5 for x in range(width(shape))])
+    # axe.set_yticks([x - 0.5 for x in range(height(shape))])
+    axe.set_xticks([x - 0.5 for x in range(w)])
+    axe.set_yticks([x - 0.5 for x in range(h)])
     axe.set_yticklabels([])
     axe.set_xticklabels([])
 
@@ -26,8 +32,8 @@ def plot_shape(shape: Shape):
 
 
 def plot_shapes(*shapes):
-    h = max(height(shape) for shape in shapes) * 2
-    w = max(height(shape) for shape in shapes) * 2
+    h = max(height(shape) for shape in shapes)
+    w = max(height(shape) for shape in shapes)
 
     fig, axes = plt.subplots(1, len(shapes))
 
@@ -49,16 +55,32 @@ def plot_proto_shape(proto_shape: Coordinates):
     plot_shape(shape)
 
 
-def plot_grid(grid: Grid):
+def plot_grid(grid: NDArray[np.uint8]):
     fig, axe = plt.subplots()
 
     axe.imshow(grid, cmap=COLORMAP, norm=NORM)
     axe.grid(True, which="both", color="lightgrey", linewidth=0.5)
 
-    axe.set_xticks(x - 0.5 for x in range(width(grid)))
-    axe.set_yticks(x - 0.5 for x in range(height(grid)))
+    axe.set_xticks([x - 0.5 for x in range(grid.shape[1])])
+    axe.set_yticks([x - 0.5 for x in range(grid.shape[0])])
     axe.set_yticklabels([])
     axe.set_xticklabels([])
+
+    plt.show()
+
+
+def plot_grids(*grids):
+    fig, axes = plt.subplots(1, len(grids))
+
+    for i, grid in enumerate(grids):
+        h = grid.shape[0]
+        w = grid.shape[1]
+        axes[i].imshow(grid, cmap=COLORMAP, norm=NORM)
+        axes[i].grid(True, which="both", color="lightgrey", linewidth=0.5)
+        axes[i].set_xticks([x - 0.5 for x in range(w)])
+        axes[i].set_yticks([x - 0.5 for x in range(h)])
+        axes[i].set_yticklabels([])
+        axes[i].set_xticklabels([])
 
     plt.show()
 
@@ -106,5 +128,40 @@ def plot_json_task(file_path: str):
             axes[j, i].set_title(title)
 
     fig.suptitle(f"{os.path.basename(file_path)}")
+
+    plt.show()
+
+
+def plot_task(data):
+    """
+    Plots a task in the json format given by the original ARC dataset,
+    where only train tasks appears.
+    Args:
+        file: Path to the json file containing the task.
+    """
+    samples = data["train"]
+
+    fig, axes = plt.subplots(2, len(samples))
+
+    for i, subtask in enumerate(samples):
+        for j, grid in enumerate([subtask["input"], subtask["output"]]):
+            h = len(grid)
+            w = len(grid[0])
+
+            title = ""
+
+            if j == 0:
+                title += f"input {i}"
+            else:
+                title += f"output {i}"
+
+            axes[j, i].imshow(grid, cmap=COLORMAP, norm=NORM)
+            axes[j, i].grid(True, which="both", color="lightgrey", linewidth=0.5)
+            axes[j, i].set_xticks([x - 0.5 for x in range(w)])
+            axes[j, i].set_yticks([x - 0.5 for x in range(h)])
+            axes[j, i].set_yticklabels([])
+            axes[j, i].set_xticklabels([])
+
+            axes[j, i].set_title(title)
 
     plt.show()
