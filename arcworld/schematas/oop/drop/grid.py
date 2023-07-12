@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Callable, Optional, Tuple
 
 from arcworld.dsl.arc_types import Coordinates, Shapes
-from arcworld.dsl.functional import normalize, recolor, width
+from arcworld.dsl.functional import normalize, recolor, shift, toindices, width
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.internal.constants import ALLOWED_COLORS, DoesNotFitError
 from arcworld.schematas.oop.subgrid_pickup.resamplers import Resampler
@@ -46,7 +46,7 @@ def _construct_bar(upper_bound_expand: int, holes_fraction: float) -> Coordinate
     return shape
 
 
-class BarPos(Enum):
+class BarOrientation(Enum):
     V = 0
     H = 1
 
@@ -59,7 +59,7 @@ class DropGridBuilder:
         bg_color: int = 0,
         bar_color: int = 2,
         max_shapes: float = math.inf,
-        bar_orientation: BarPos = BarPos.H,
+        bar_orientation: BarOrientation = BarOrientation.H,
         holes_fraction: float = 0,
     ) -> None:
         self.height = height
@@ -78,7 +78,10 @@ class DropGridBuilder:
         cls,
         grid_dimensions_range: Tuple[int, int] = (10, 30),
         max_shapes_range: Tuple[float, float] = (3, 10),
-        bar_orientations: Tuple[BarPos, ...] = (BarPos.H, BarPos.V),
+        bar_orientations: Tuple[BarOrientation, ...] = (
+            BarOrientation.H,
+            BarOrientation.V,
+        ),
         holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
     ) -> Callable[[], DropGridBuilder]:
         """
@@ -115,17 +118,25 @@ class DropGridBuilder:
         """
         Base form of the grid has the bar in horizontal position.
         """
-        if self.bar_orientation == BarPos.H:
+        if self.bar_orientation == BarOrientation.H:
             grid = BSTGridBruteForce(
                 self.height,
                 self.width,
                 mode=BinaryRelation.BelowOf,
                 bg_color=self.bg_color,
             )
-            proto_bar = _construct_bar(grid.width, self.holes_fraction)
-
             # Choose a random position to place the bar.
             random_pos = (random.randint(0, grid.height), 0)
+
+            # Mark the edge as occupied.
+            edge = _construct_bar(grid.width, 0)
+            grid._occupied = grid._occupied | toindices(shift(edge, random_pos))
+
+            # Create the bar with holes.
+            proto_bar = _construct_bar(grid.width, self.holes_fraction)
+            bar = recolor(self.bar_color, proto_bar)
+            grid.place_object_deterministic(bar, random_pos)
+
         else:
             grid = BSTGridBruteForce(
                 self.height,
@@ -133,15 +144,20 @@ class DropGridBuilder:
                 mode=BinaryRelation.LeftOf,
                 bg_color=self.bg_color,
             )
-            proto_bar = _construct_bar(grid.height, self.holes_fraction)
-            # Rotate the horizontal bar.
-            proto_bar = _rot90clockwise(proto_bar)
-
             # Choose a random position to place the bar.
             random_pos = (0, random.randint(0, grid.width))
 
-        bar = recolor(self.bar_color, proto_bar)
-        grid.place_object_deterministic(bar, random_pos)
+            # Mark the edge as occupied.
+            edge = _construct_bar(grid.height, 0)
+            edge = _rot90clockwise(edge)
+            grid._occupied = grid._occupied | toindices(shift(edge, random_pos))
+
+            # Create the bar with holes.
+            proto_bar = _construct_bar(grid.height, self.holes_fraction)
+            # Rotate the horizontal bar.
+            proto_bar = _rot90clockwise(proto_bar)
+            bar = recolor(self.bar_color, proto_bar)
+            grid.place_object_deterministic(bar, random_pos)
 
         return grid
 

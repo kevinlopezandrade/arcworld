@@ -18,7 +18,7 @@ from arcworld.filters.objects_filter import ShapesFilter
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.grid.oop.util import Node
 from arcworld.internal.constants import ALLOWED_COLORS
-from arcworld.schematas.oop.drop.grid import BarPos, DropGridBuilder
+from arcworld.schematas.oop.drop.grid import BarOrientation, DropGridBuilder
 from arcworld.schematas.oop.subgrid_pickup.resamplers import OnlyShapesRepeated
 from arcworld.transformations.base_transform import GridsNewTransform
 
@@ -95,11 +95,11 @@ def shift_until_touches_x(
         grid._update_grid(shift(shape, disp), padding=0, no_bbox=True)
 
 
-def _get_orientation(bar: Shape) -> BarPos:
+def _get_orientation(bar: Shape) -> BarOrientation:
     if height(bar) == 1:
-        return BarPos.H
+        return BarOrientation.H
     elif width(bar) == 1:
-        return BarPos.V
+        return BarOrientation.V
     else:
         raise ValueError("Not a bar")
 
@@ -203,7 +203,7 @@ class DropBidirectional(GridsNewTransform):
         orientation = _get_orientation(root.key)
 
         # Create new output grid.
-        if orientation == BarPos.H:
+        if orientation == BarOrientation.H:
             output_grid = BSTGridBruteForce(
                 grid.height,
                 grid.width,
@@ -222,7 +222,7 @@ class DropBidirectional(GridsNewTransform):
 
         output_grid._update_grid(root.key, padding=0, no_bbox=True)
 
-        if orientation == BarPos.H:
+        if orientation == BarOrientation.H:
             self._shift_shapes_vertically(root_input=root, output_grid=output_grid)
         else:
             self._shift_shapes_horizontally(root_input=root, output_grid=output_grid)
@@ -250,7 +250,7 @@ class DropBidirectionalDots(DropBidirectional):
             h = random.randint(10, 30)
             w = random.randint(10, 30)
             max_shapes = random.randint(5, 20)
-            bar_orientation = random.choice([BarPos.H, BarPos.V])
+            bar_orientation = random.choice([BarOrientation.H, BarOrientation.V])
             holes_fraction = random.uniform(0, 0.5)
 
             builder = DropGridBuilder(
@@ -276,7 +276,7 @@ class DropBidirectionalDots(DropBidirectional):
         orientation = _get_orientation(root.key)
 
         # Create new output grid.
-        if orientation == BarPos.H:
+        if orientation == BarOrientation.H:
             output_grid = BSTGridBruteForce(
                 grid.height,
                 grid.width,
@@ -295,7 +295,7 @@ class DropBidirectionalDots(DropBidirectional):
 
         output_grid._update_grid(root.key, padding=0, no_bbox=True)
 
-        if orientation == BarPos.H:
+        if orientation == BarOrientation.H:
             self._shift_shapes_vertically(
                 root_input=root, output_grid=output_grid, remove_if_limit=True
             )
