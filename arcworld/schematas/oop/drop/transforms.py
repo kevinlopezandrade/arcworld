@@ -1,5 +1,6 @@
+import math
 import random
-from typing import Callable, List, Optional, cast
+from typing import Callable, List, Optional, Tuple, cast
 
 from arcworld.dsl.arc_types import Coordinate, Grid, Shape
 from arcworld.dsl.functional import (
@@ -119,7 +120,7 @@ def _get_orientation(bar: Shape) -> BarOrientation:
         raise ValueError("Not a bar")
 
 
-def get_max_dimension_filter(dim: int) -> Callable[[Shape], bool]:
+def get_max_dimension_filter(dim: float) -> Callable[[Shape], bool]:
     def max_dim(shape: Shape) -> bool:
         if width(shape) <= dim and height(shape) <= dim:
             return True
@@ -130,20 +131,60 @@ def get_max_dimension_filter(dim: int) -> Callable[[Shape], bool]:
 
 
 class DropBidirectional(GridsNewTransform):
-    def __init__(self, max_shape_dimesion: int = 3) -> None:
+    def __init__(self, max_shape_dimesion: float = math.inf) -> None:
         self._max_shape_dimension = max_shape_dimesion
         super().__init__()
 
     @property
     def filters(self) -> List[ShapesFilter]:
-        filter = FunctionalFilter(
-            f"MAX_DIM_{self._max_shape_dimension}",
-            get_max_dimension_filter(self._max_shape_dimension),
-        )
-        return [filter]
+        if self._max_shape_dimension < math.inf:
+            filter = FunctionalFilter(
+                f"MAX_DIM_{self._max_shape_dimension}",
+                get_max_dimension_filter(self._max_shape_dimension),
+            )
+            return [filter]
+        else:
+            return []
 
-    def grid_sampler(self, **kwargs) -> Callable[[], DropGridBuilder]:
-        return DropGridBuilder.sampler(**kwargs)
+    def grid_sampler(
+        self,
+        grid_dimensions_range: Tuple[int, int] = (10, 30),
+        max_shapes_range: Tuple[float, float] = (math.inf, math.inf),
+        bar_orientations: Tuple[BarOrientation, ...] = (
+            BarOrientation.H,
+            BarOrientation.V,
+        ),
+        holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
+    ) -> Callable[[], DropGridBuilder]:
+        """
+        Creates a grid builder with random parameters.
+        """
+        bg_color = random.choice(list(ALLOWED_COLORS))
+        bar_color = random.choice(list(ALLOWED_COLORS - {bg_color}))
+
+        def sampler():
+            h = random.randint(*grid_dimensions_range)
+            w = random.randint(*grid_dimensions_range)
+
+            if math.inf in max_shapes_range:
+                max_shapes = math.inf
+            else:
+                max_shapes = random.randint(*max_shapes_range)
+
+            bar_orientation = random.choice(bar_orientations)
+            holes_fraction = random.uniform(*holes_fraction_range)
+
+            return DropGridBuilder(
+                height=h,
+                width=w,
+                max_shapes=max_shapes,
+                bar_orientation=bar_orientation,
+                holes_fraction=holes_fraction,
+                bg_color=bg_color,
+                bar_color=bar_color,
+            )
+
+        return sampler
 
     @staticmethod
     def _shift_shapes_vertically(
@@ -262,6 +303,9 @@ class DropBidirectional(GridsNewTransform):
 
 
 class DropBidirectionalDots(DropBidirectional):
+    def __init__(self) -> None:
+        pass
+
     @property
     def filters(self) -> List[ShapesFilter]:
         max_dim_filter = FunctionalFilter("MAX_DIM_1", get_max_dimension_filter(1))

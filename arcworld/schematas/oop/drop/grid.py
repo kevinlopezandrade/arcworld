@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import random
 from enum import Enum
-from typing import Callable, Optional, Tuple
+from typing import Optional
 
 from arcworld.dsl.arc_types import Coordinates, Shapes
 from arcworld.dsl.functional import normalize, recolor, shift, toindices, width
@@ -72,47 +72,6 @@ class DropGridBuilder:
         self.resampler: Optional[Resampler] = None
 
         self._available_colors = ALLOWED_COLORS - {bg_color} - {bar_color}
-
-    @classmethod
-    def sampler(
-        cls,
-        grid_dimensions_range: Tuple[int, int] = (10, 30),
-        max_shapes_range: Tuple[float, float] = (3, 10),
-        bar_orientations: Tuple[BarOrientation, ...] = (
-            BarOrientation.H,
-            BarOrientation.V,
-        ),
-        holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
-    ) -> Callable[[], DropGridBuilder]:
-        """
-        Creates a grid builder with random parameters.
-        """
-        bg_color = random.choice(list(ALLOWED_COLORS))
-        bar_color = random.choice(list(ALLOWED_COLORS - {bg_color}))
-
-        def sampler():
-            h = random.randint(*grid_dimensions_range)
-            w = random.randint(*grid_dimensions_range)
-
-            if math.inf in max_shapes_range:
-                max_shapes = math.inf
-            else:
-                max_shapes = random.randint(*max_shapes_range)
-
-            bar_orientation = random.choice(bar_orientations)
-            holes_fraction = random.uniform(*holes_fraction_range)
-
-            return cls(
-                height=h,
-                width=w,
-                max_shapes=max_shapes,
-                bar_orientation=bar_orientation,
-                holes_fraction=holes_fraction,
-                bg_color=bg_color,
-                bar_color=bar_color,
-            )
-
-        return sampler
 
     def _construct_base_form(self) -> BSTGridBruteForce:
         """
