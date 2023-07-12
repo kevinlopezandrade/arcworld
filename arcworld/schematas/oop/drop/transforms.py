@@ -6,6 +6,7 @@ from arcworld.dsl.functional import (
     cover,
     fill,
     height,
+    llcorner,
     lrcorner,
     shift,
     sign,
@@ -38,9 +39,16 @@ def displace(grid: Grid, shape: Shape, disp: Coordinate, background: int = 0):
 
 
 def shift_until_touches_y(
-    grid: BSTGridBruteForce, shape: Shape, y_dest: int, remove_if_limit: bool = False
+    grid: BSTGridBruteForce,
+    shape: Shape,
+    y_dest: int,
+    remove_if_limit: bool = False,
+    from_below: bool = True,
 ):
-    y_orig = ulcorner(shape)[0]
+    if from_below:
+        y_orig = ulcorner(shape)[0]
+    else:
+        y_orig = llcorner(shape)[0]
     steps = y_dest - y_orig
     factor = cast(int, sign(steps))
 
@@ -67,9 +75,16 @@ def shift_until_touches_y(
 
 
 def shift_until_touches_x(
-    grid: BSTGridBruteForce, shape: Shape, x_dest: int, remove_if_limit: bool = False
+    grid: BSTGridBruteForce,
+    shape: Shape,
+    x_dest: int,
+    remove_if_limit: bool = False,
+    from_left: bool = True,
 ):
-    x_orig = lrcorner(shape)[1]
+    if from_left:
+        x_orig = lrcorner(shape)[1]
+    else:
+        x_orig = llcorner(shape)[1]
     steps = x_dest - x_orig
     factor = cast(int, sign(steps))
 
@@ -152,13 +167,21 @@ class DropBidirectional(GridsNewTransform):
         shapes_below = shapes_below[::-1]
         for shape in shapes_below:
             shift_until_touches_y(
-                output_grid, shape, y_dest, remove_if_limit=remove_if_limit
+                output_grid,
+                shape,
+                y_dest,
+                remove_if_limit=remove_if_limit,
+                from_below=True,
             )
 
         # Fill the shapes above the bar.
         for shape in shapes_above:
             shift_until_touches_y(
-                output_grid, shape, y_dest, remove_if_limit=remove_if_limit
+                output_grid,
+                shape,
+                y_dest,
+                remove_if_limit=remove_if_limit,
+                from_below=False,
             )
 
         return output_grid
@@ -184,13 +207,21 @@ class DropBidirectional(GridsNewTransform):
         shapes_left = shapes_left[::-1]
         for shape in shapes_left:
             shift_until_touches_x(
-                output_grid, shape, x_dest, remove_if_limit=remove_if_limit
+                output_grid,
+                shape,
+                x_dest,
+                remove_if_limit=remove_if_limit,
+                from_left=True,
             )
 
         # Fill the shapes to the right of the bar.
         for shape in shapes_right:
             shift_until_touches_x(
-                output_grid, shape, x_dest, remove_if_limit=remove_if_limit
+                output_grid,
+                shape,
+                x_dest,
+                remove_if_limit=remove_if_limit,
+                from_left=False,
             )
 
         return output_grid

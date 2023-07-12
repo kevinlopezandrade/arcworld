@@ -19,7 +19,7 @@ def _draw_holes(proto_shape: Coordinates, n_holes: int) -> Coordinates:
     """
     # Compute width an drop n pixels.
     w = width(proto_shape)
-    holes_index = random.choices(list(range(w)), k=n_holes)
+    holes_index = random.sample(list(range(w)), k=n_holes)
 
     shape_with_holes = set(proto_shape)
     for index in holes_index:
@@ -168,7 +168,9 @@ class DropGridBuilder:
 
         if N < math.inf:
             if self.resampler is None:
-                sampled_shapes = random.choices(list(shapes), k=int(N))
+                # TODO: Decide which strategy is better either sample
+                # without replacement or with replacement.
+                sampled_shapes = random.sample(list(shapes), k=int(N))
             else:
                 sampled_shapes = self.resampler.resample(
                     shapes, n_shapes_per_grid=int(N)
