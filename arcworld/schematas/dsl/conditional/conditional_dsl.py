@@ -2,7 +2,7 @@ import random
 from typing import Tuple
 
 from arcworld.dsl.arc_types import Coordinate, Shapes
-from arcworld.grid.dsl.grid_dsl import GridDSL
+from arcworld.grid.dsl.grid_dsl import GridDSLOld
 
 
 # TODO: I can define this interface more abstractly since different grids
@@ -60,13 +60,13 @@ class ConditionalGridSampler:
 
     def sample_input_grid(
         self, satisfying_objects: Shapes, unsatisfying_objects: Shapes
-    ) -> GridDSL:
+    ) -> GridDSLOld:
         h = random.randint(self.min_dim, self.max_dim)
         w = random.randint(self.min_dim, self.max_dim)
         background_color = random.choice(self.background_color_options)
 
         # Construct the Grid Object
-        grid = GridDSL(
+        grid = GridDSLOld(
             h,
             w,
             self.max_obj_dimension,

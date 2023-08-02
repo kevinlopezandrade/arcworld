@@ -20,7 +20,7 @@ from arcworld.filters.objects_filter import ShapesFilter
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.grid.oop.util import Node
 from arcworld.internal.constants import ALLOWED_COLORS
-from arcworld.schematas.oop.drop.grid import BarOrientation, DropGridBuilder
+from arcworld.schematas.oop.drop.grid import BarOrientation, GravityGridBuilder
 from arcworld.schematas.oop.subgrid_pickup.resamplers import OnlyShapesRepeated
 from arcworld.transformations.base_transform import GridsNewTransform
 
@@ -131,7 +131,7 @@ def get_max_dimension_filter(dim: float) -> Callable[[Shape], bool]:
 
 
 class DropBidirectional(GridsNewTransform):
-    def __init__(self, max_shape_dimesion: float = math.inf) -> None:
+    def __init__(self, max_shape_dimesion: float = 3) -> None:
         self._max_shape_dimension = max_shape_dimesion
         super().__init__()
 
@@ -155,7 +155,7 @@ class DropBidirectional(GridsNewTransform):
             BarOrientation.V,
         ),
         holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
-    ) -> Callable[[], DropGridBuilder]:
+    ) -> Callable[[], GravityGridBuilder]:
         """
         Creates a grid builder with random parameters.
         """
@@ -174,7 +174,7 @@ class DropBidirectional(GridsNewTransform):
             bar_orientation = random.choice(bar_orientations)
             holes_fraction = random.uniform(*holes_fraction_range)
 
-            return DropGridBuilder(
+            return GravityGridBuilder(
                 height=h,
                 width=w,
                 max_shapes=max_shapes,
@@ -312,7 +312,7 @@ class DropBidirectionalDots(DropBidirectional):
 
         return [max_dim_filter]
 
-    def grid_sampler(self) -> Callable[[], DropGridBuilder]:
+    def grid_sampler(self) -> Callable[[], GravityGridBuilder]:
         """
         A grid sampler samples GridBuilders that satisfy their conditions.
         It should return a callback that will generate random parameters
@@ -328,7 +328,7 @@ class DropBidirectionalDots(DropBidirectional):
             bar_orientation = random.choice([BarOrientation.H, BarOrientation.V])
             holes_fraction = random.uniform(0, 0.5)
 
-            builder = DropGridBuilder(
+            builder = GravityGridBuilder(
                 height=h,
                 width=w,
                 max_shapes=max_shapes,
@@ -380,3 +380,46 @@ class DropBidirectionalDots(DropBidirectional):
             )
 
         return output_grid
+
+
+class Gravitate(DropBidirectional):
+    def grid_sampler(
+        self,
+        grid_dimensions_range: Tuple[int, int] = (10, 30),
+        max_shapes_range: Tuple[float, float] = (math.inf, math.inf),
+        bar_orientations: Tuple[BarOrientation, ...] = (
+            BarOrientation.H,
+            BarOrientation.V,
+        ),
+        holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
+    ) -> Callable[[], GravityGridBuilder]:
+        """
+        Creates a grid builder with random parameters.
+        """
+        bg_color = random.choice(list(ALLOWED_COLORS))
+        bar_color = random.choice(list(ALLOWED_COLORS - {bg_color}))
+        bar_orientation = random.choice(bar_orientations)
+
+        def sampler():
+            h = random.randint(*grid_dimensions_range)
+            w = random.randint(*grid_dimensions_range)
+
+            if math.inf in max_shapes_range:
+                max_shapes = math.inf
+            else:
+                max_shapes = random.randint(*max_shapes_range)
+
+            holes_fraction = random.uniform(*holes_fraction_range)
+
+            return GravityGridBuilder(
+                height=h,
+                width=w,
+                max_shapes=max_shapes,
+                bar_orientation=bar_orientation,
+                holes_fraction=holes_fraction,
+                bg_color=bg_color,
+                bar_color=bar_color,
+                no_bar=True,
+            )
+
+        return sampler

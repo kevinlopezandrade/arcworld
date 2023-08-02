@@ -51,7 +51,11 @@ class BarOrientation(Enum):
     H = 1
 
 
-class DropGridBuilder:
+class GravityGridBuilder:
+    """
+    Inspired in : f83cb3f6.json , 5ffb2104.json, 6ad5bdfd.json
+    """
+
     def __init__(
         self,
         height: int = 20,
@@ -61,6 +65,7 @@ class DropGridBuilder:
         max_shapes: float = math.inf,
         bar_orientation: BarOrientation = BarOrientation.H,
         holes_fraction: float = 0,
+        no_bar: bool = False,
     ) -> None:
         self.height = height
         self.width = width
@@ -70,6 +75,7 @@ class DropGridBuilder:
         self.bg_color = bg_color
         self.bar_color = bar_color
         self.resampler: Optional[Resampler] = None
+        self.no_bar = no_bar
 
         self._available_colors = ALLOWED_COLORS - {bg_color} - {bar_color}
 
@@ -85,7 +91,10 @@ class DropGridBuilder:
                 bg_color=self.bg_color,
             )
             # Choose a random position to place the bar.
-            random_pos = (random.randint(0, grid.height), 0)
+            if self.no_bar:
+                random_pos = (grid.height, 0)
+            else:
+                random_pos = (random.randint(0, grid.height - 1), 0)
 
             # Mark the edge as occupied.
             edge = _construct_bar(grid.width, 0)
@@ -94,7 +103,7 @@ class DropGridBuilder:
             # Create the bar with holes.
             proto_bar = _construct_bar(grid.width, self.holes_fraction)
             bar = recolor(self.bar_color, proto_bar)
-            grid.place_object_deterministic(bar, random_pos)
+            grid.place_shape(bar, random_pos)
 
         else:
             grid = BSTGridBruteForce(
@@ -104,7 +113,10 @@ class DropGridBuilder:
                 bg_color=self.bg_color,
             )
             # Choose a random position to place the bar.
-            random_pos = (0, random.randint(0, grid.width))
+            if self.no_bar:
+                random_pos = (0, grid.width)
+            else:
+                random_pos = (0, random.randint(0, grid.width - 1))
 
             # Mark the edge as occupied.
             edge = _construct_bar(grid.height, 0)
@@ -116,7 +128,7 @@ class DropGridBuilder:
             # Rotate the horizontal bar.
             proto_bar = _rot90clockwise(proto_bar)
             bar = recolor(self.bar_color, proto_bar)
-            grid.place_object_deterministic(bar, random_pos)
+            grid.place_shape(bar, random_pos)
 
         return grid
 
@@ -142,7 +154,7 @@ class DropGridBuilder:
         placed = 0
         for shape in sampled_shapes:
             try:
-                grid.place_object(shape, color_palette=self._available_colors)
+                grid.place_shape_random(shape, color_palette=self._available_colors)
             except DoesNotFitError:
                 pass
             else:

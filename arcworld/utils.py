@@ -8,7 +8,26 @@ from numpy.typing import NDArray
 
 from arcworld.dsl.arc_types import Coordinates, Shape
 from arcworld.dsl.functional import canvas, height, normalize, paint, recolor, width
-from arcworld.internal.constants import COLORMAP, NORM
+from arcworld.internal.constants import COLORMAP, NORM, Example, Task
+
+
+def decode_json_task(file_path: str) -> Task:
+    with open(file_path) as f:
+        data = json.load(f)
+
+    examples = data["train"] + data["test"]
+
+    task: Task = []
+    for example in examples:
+        input = example["input"]
+        output = example["output"]
+        example = Example(
+            input=np.array(input, dtype=np.uint8),
+            output=np.array(output, dtype=np.uint8),
+        )
+        task.append(example)
+
+    return task
 
 
 def plot_shape(shape: Shape):
@@ -132,21 +151,21 @@ def plot_json_task(file_path: str):
     plt.show()
 
 
-def plot_task(data):
+def plot_task(task: Task):
     """
     Plots a task in the json format given by the original ARC dataset,
     where only train tasks appears.
     Args:
         file: Path to the json file containing the task.
     """
-    samples = data["train"]
+    N = len(task)  # noqa
 
-    fig, axes = plt.subplots(2, len(samples))
+    fig, axes = plt.subplots(2, N)
 
-    for i, subtask in enumerate(samples):
-        for j, grid in enumerate([subtask["input"], subtask["output"]]):
-            h = len(grid)
-            w = len(grid[0])
+    for i, example in enumerate(task):
+        for j, grid in enumerate([example.input, example.output]):
+            h = grid.shape[0]
+            w = grid.shape[1]
 
             title = ""
 

@@ -19,7 +19,7 @@ from arcworld.dsl.functional import (
 )
 
 
-class GridDSL:
+class GridDSLOld:
     def __init__(
         self,
         h: int,

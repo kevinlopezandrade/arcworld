@@ -42,14 +42,6 @@ def replicate_based_on_shape(shape: Shape) -> Shape:
     return normalize(recolor(5, new_shape))
 
 
-# def new(shaep: Shape) -> Shape:
-# Think about paths
-# shape  -> urcorner(shape)
-#        -> height(backdrop(shape))
-# compose(lbdind(multiply, height(backdrop(shape))), rbind(substract, urcorner(shape))
-# apply(apply(), toindices(shape))
-
-
 generator = ShapeGeneratorDSL(max_obj_dimension=5)
 shapes = generator.generate_random_shapes()
 
@@ -58,10 +50,7 @@ shapes = list(filter.filter(shapes))
 random.shuffle(shapes)
 
 
-# shapes = []
-# shapes.append({(7, (0,0)), (7, (0, 1)), (7, (1, 2)), (7, (2, 0))})
-
-N = 5
+N = 4
 for i, shape in enumerate(shapes):
     tr_shape = replicate_based_on_shape(shape)
     plot_shapes(shape, tr_shape)

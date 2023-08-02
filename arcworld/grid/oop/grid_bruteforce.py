@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from arcworld.dsl.arc_types import Coordinate, Coordinates, Shape
+from arcworld.dsl.arc_types import Coordinate, Coordinates, Grid, Shape
 from arcworld.dsl.functional import (
     add,
     canvas,
@@ -75,12 +75,32 @@ class GridBruteForce:
         return self._margin
 
     @property
-    def grid(self) -> NDArray[np.uint8]:
+    def grid(self) -> Grid:
+        return self._grid
+
+    @grid.setter
+    def grid(self, grid: Grid):
+        self._grid = grid
+
+    @property
+    def grid_np(self) -> NDArray[np.uint8]:
         return np.array(self._grid, dtype=np.uint8)
 
     @property
     def shapes(self) -> List[Shape]:
         return self._shapes
+
+    @property
+    def bg_color(self) -> int:
+        return self._bg_color
+
+    @property
+    def occupied(self) -> frozenset[Coordinate]:
+        return self._occupied
+
+    @occupied.setter
+    def occupied(self, new_coodinates: Coordinates):
+        self._occupied = new_coodinates
 
     def _update_grid(self, shape: Shape, padding: int = 0, no_bbox: bool = False):
         """
@@ -95,28 +115,34 @@ class GridBruteForce:
 
         self._shapes.append(shape)
 
-    def paint_occupied(self) -> NDArray[np.uint8]:
-        painted = fill(self._grid, 9, frozenset(self._occupied))
+    def paint_occupied(self, paint_shapes: bool = False) -> NDArray[np.uint8]:
+        painted = fill(self.grid, 9, self.occupied)
+
+        if paint_shapes:
+            for shape in self.shapes:
+                painted = paint(painted, shape)
+
         return np.array(painted, dtype=np.uint8)
 
-    def place_object_deterministic(
+    def place_shape(
         self, shape: Shape, pos: Coordinate, padding: int = 0, no_bbox: bool = False
     ):
         """
         Assumes a normalized shaped to be placed in the coordinates (y, x)
-        in the grid.
+        in the grid, and updates the occupied indices accordingly.
+        Padding is only used if no_bbox = False.
         """
         shifted_shape = shift(shape, pos)
         shifted_shape = cast(Shape, shifted_shape)
 
         self._update_grid(shifted_shape, padding=padding, no_bbox=no_bbox)
 
-    def place_object(
+    def place_shape_random(
         self, shape: Shape, color_palette: Optional[Set[int]] = None
     ) -> Shape:
         """
         Brute force algorithm to place shapes
-        in a grid randomly.
+        in a grid randomly. The shape should be in a normalized position.
         """
         # Define boundaries
         h = height(shape)
@@ -204,6 +230,24 @@ class BSTGridBruteForce(GridBruteForce):
     @property
     def tree(self) -> Tree[Shape]:
         return self._shapes_tree
+
+    @property
+    def shapes(self) -> List[Shape]:
+        """
+        Return the shapes in order defined by the binary relation.
+        """
+        shapes: List[Shape] = []
+        root = self.tree.root
+
+        def inorder(root: Optional[Node[Shape]]):
+            if root is not None:
+                inorder(root.left)
+                shapes.append(root.key)
+                inorder(root.right)
+
+        inorder(root)
+
+        return shapes
 
     @staticmethod
     def _is_below(a: Node[Shape], b: Node[Shape]) -> bool:
