@@ -22,9 +22,10 @@ class GridsNewTransform(metaclass=ABCMeta):
     Interace for every grid transform
     """
 
+    @classmethod
     @property
-    def name(self) -> str:
-        return self.__class__.__name__
+    def name(cls) -> str:
+        return cls.__name__
 
     @abstractmethod
     def transform(self, grid) -> Any:

@@ -12,6 +12,7 @@ scipy = "^1.9.3"
 pandas = "^2.0.2"
 tqdm = "^4.65"
 matplotlib = "*"
+SQLAlchemy = "^2.0.20"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

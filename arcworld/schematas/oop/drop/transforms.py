@@ -409,7 +409,7 @@ class Gravitate(DropBidirectional):
             else:
                 max_shapes = random.randint(*max_shapes_range)
 
-            holes_fraction = random.uniform(*holes_fraction_range)
+            holes_fraction = 0.0
 
             return GravityGridBuilder(
                 height=h,

@@ -84,6 +84,13 @@ def decode_normalized_task(task_normalized: NDArray[np.uint8]) -> Task:
     """
     tasks: Task = []
 
+    try:
+        task_normalized.shape
+    except AttributeError:
+        task_normalized = np.frombuffer(task_normalized, dtype=np.uint8).reshape(
+            MAX_PAIRS, 2, 30, 30
+        )
+
     for i in range(task_normalized.shape[0]):
         input, output = task_normalized[i]
         h_input, w_input = _find_bounds(input)
