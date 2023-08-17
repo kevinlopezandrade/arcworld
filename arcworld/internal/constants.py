@@ -41,9 +41,7 @@ class GridConstructionError(RuntimeError):
 # Example: {"train": [{"input": np.array, "output": np.array}]}
 TASK_DICT = Dict[str, List[Dict[str, NDArray[np.uint8]]]]
 
-# Example = Tuple[NDArray[np.uint8], NDArray[np.uint8]]
 Example = NamedTuple(
     "Example", [("input", NDArray[np.uint8]), ("output", NDArray[np.uint8])]
 )
-# Task = Tuple[Example, Example, Example, Example]
 Task = List[Example]
