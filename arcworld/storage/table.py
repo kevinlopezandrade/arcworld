@@ -50,7 +50,8 @@ class Engineered(Base):
         task: Normalized task in a shape of (12,2,30,30)
     """
 
-    __abstract__ = True
+    # __abstract__ = True
+    __tablename__ = "reverse_engineered"
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     author: Mapped[str] = mapped_column(String(64))
     transformation: Mapped[str] = mapped_column(String(64))

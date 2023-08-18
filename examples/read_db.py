@@ -6,7 +6,7 @@ from arcworld.utils import plot_task
 
 # Create SQLAlchemy engine.
 # Replace by the path to your copy of the database
-engine = create_engine("sqlite://///home/kev/Generator/tasks.db")
+engine = create_engine("sqlite://///Users/kev/arcworld/examples/tasks.db")
 
 # Reflect the database metadata.
 metadata = MetaData()
