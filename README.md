@@ -51,12 +51,16 @@ $ pre-commit install
 ```
 
 ## Datasets
-We can generate random shapes on the fly by using the ShapeGeneratorDSL class
-or instead load them from a file with stored shapes using either
-ShapeGeneratorFromFile or ShapeGeneratorFromProtoFile.
 
-Default datasets are provided, but in order to use them you need to install
+### Task
+Tasks are stored in an SQLite database inside 'datasets/tasks.db'.
+Before fetching the database you need to install
 [git-lfs](https://github.com/git-lfs/git-lfs).
+
+And then run
+```shell
+$ git lfs fetch
+```
 
 ## Examples
 Python scripts with examples can be found in the *examples/* directory.

@@ -1,6 +1,6 @@
 import json
 import os
-from typing import cast
+from typing import Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -151,7 +151,7 @@ def plot_json_task(file_path: str):
     plt.show()
 
 
-def plot_task(task: Task):
+def plot_task(task: Task, title: Optional[str] = None):
     """
     Plots a task in the json format given by the original ARC dataset,
     where only train tasks appears.
@@ -167,12 +167,12 @@ def plot_task(task: Task):
             h = grid.shape[0]
             w = grid.shape[1]
 
-            title = ""
+            label = ""
 
             if j == 0:
-                title += f"input {i}"
+                label += f"input {i}"
             else:
-                title += f"output {i}"
+                label += f"output {i}"
 
             axes[j, i].imshow(grid, cmap=COLORMAP, norm=NORM)
             axes[j, i].grid(True, which="both", color="lightgrey", linewidth=0.5)
@@ -181,6 +181,9 @@ def plot_task(task: Task):
             axes[j, i].set_yticklabels([])
             axes[j, i].set_xticklabels([])
 
-            axes[j, i].set_title(title)
+            axes[j, i].set_title(label)
+
+    if title:
+        fig.suptitle(title)
 
     plt.show()
