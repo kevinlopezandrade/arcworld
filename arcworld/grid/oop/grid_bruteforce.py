@@ -102,7 +102,7 @@ class GridBruteForce:
     def occupied(self, new_coodinates: Coordinates):
         self._occupied = new_coodinates
 
-    def _update_grid(self, shape: Shape, padding: int = 0, no_bbox: bool = False):
+    def add_shape(self, shape: Shape, padding: int = 0, no_bbox: bool = False):
         """
         Update the grid and the occupied set, with the passed shape.
         """
@@ -135,7 +135,7 @@ class GridBruteForce:
         shifted_shape = shift(shape, pos)
         shifted_shape = cast(Shape, shifted_shape)
 
-        self._update_grid(shifted_shape, padding=padding, no_bbox=no_bbox)
+        self.add_shape(shifted_shape, padding=padding, no_bbox=no_bbox)
 
     def place_shape_random(
         self, shape: Shape, color_palette: Optional[Set[int]] = None
@@ -182,7 +182,7 @@ class GridBruteForce:
             color = random.choice(list(set(range(9)) - {self._bg_color}))
             shifted_shape = recolor(color, shifted_shape)
 
-        self._update_grid(shifted_shape, padding=self._margin)
+        self.add_shape(shifted_shape, padding=self._margin)
 
         return shifted_shape
 
@@ -216,7 +216,7 @@ class BSTGridBruteForce(GridBruteForce):
             raise ValueError("Not supported binary relation")
 
     @override
-    def _update_grid(self, shape: Shape, padding: int = 0, no_bbox: bool = False):
+    def add_shape(self, shape: Shape, padding: int = 0, no_bbox: bool = False):
         self._grid = paint(self._grid, shape)
 
         if no_bbox:
@@ -248,6 +248,12 @@ class BSTGridBruteForce(GridBruteForce):
         inorder(root)
 
         return shapes
+
+    def clone_no_shapes(self) -> "BSTGridBruteForce":
+        grid = BSTGridBruteForce(self.height, self.width, self.bg_color, self.margin)
+        grid._binary_relation = self._binary_relation
+
+        return grid
 
     @staticmethod
     def _is_below(a: Node[Shape], b: Node[Shape]) -> bool:

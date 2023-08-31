@@ -72,7 +72,7 @@ def shift_until_touches_y(
         grid._occupied = grid._occupied - toindices(shape)
 
         # Update the grid.
-        grid._update_grid(shift(shape, disp), padding=0, no_bbox=True)
+        grid.add_shape(shift(shape, disp), padding=0, no_bbox=True)
 
 
 def shift_until_touches_x(
@@ -108,7 +108,7 @@ def shift_until_touches_x(
         grid._occupied = grid._occupied - toindices(shape)
 
         # Update the grid.
-        grid._update_grid(shift(shape, disp), padding=0, no_bbox=True)
+        grid.add_shape(shift(shape, disp), padding=0, no_bbox=True)
 
 
 def _get_orientation(bar: Shape) -> BarOrientation:
@@ -201,7 +201,7 @@ class DropBidirectional(GridsNewTransform):
 
         # Add the shapes.
         for shape in shapes_below + shapes_above:
-            output_grid._update_grid(shape, no_bbox=True)
+            output_grid.add_shape(shape, no_bbox=True)
 
         # Fill the shapes below the bar.
         y_dest = ulcorner(root_input.key)[0]
@@ -241,7 +241,7 @@ class DropBidirectional(GridsNewTransform):
 
         # Add the shapes.
         for shape in shapes_left + shapes_right:
-            output_grid._update_grid(shape, no_bbox=True)
+            output_grid.add_shape(shape, no_bbox=True)
 
         # Fill the shapes to the left of the bar.
         x_dest = lrcorner(root_input.key)[1]
@@ -292,7 +292,7 @@ class DropBidirectional(GridsNewTransform):
                 bg_color=grid._bg_color,
             )
 
-        output_grid._update_grid(root.key, padding=0, no_bbox=True)
+        output_grid.add_shape(root.key, padding=0, no_bbox=True)
 
         if orientation == BarOrientation.H:
             self._shift_shapes_vertically(root_input=root, output_grid=output_grid)
@@ -368,7 +368,7 @@ class DropBidirectionalDots(DropBidirectional):
                 bg_color=grid._bg_color,
             )
 
-        output_grid._update_grid(root.key, padding=0, no_bbox=True)
+        output_grid.add_shape(root.key, padding=0, no_bbox=True)
 
         if orientation == BarOrientation.H:
             self._shift_shapes_vertically(
