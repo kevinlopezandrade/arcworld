@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any, List
+from typing import Any, List, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
@@ -46,3 +46,14 @@ class GridsTransform(metaclass=ABCMeta):
         self, grids: List[NDArray[np.int8]], seed: int
     ) -> List[NDArray[np.int8]]:
         pass
+
+
+class TransformProtocol(Protocol):
+    # @classmethod
+    # @property
+    # def name(cls) -> str:
+    #     ...
+    #
+    @abstractmethod
+    def transform(self, grid) -> Any:
+        ...

@@ -160,7 +160,7 @@ def plot_task(task: Task, title: Optional[str] = None):
     """
     N = len(task)  # noqa
 
-    fig, axes = plt.subplots(2, N)
+    fig, axes = plt.subplots(2, N, squeeze=False)
 
     for i, example in enumerate(task):
         for j, grid in enumerate([example.input, example.output]):
