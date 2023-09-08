@@ -116,11 +116,12 @@ class GridBruteForce:
         self._shapes.append(shape)
 
     def paint_occupied(self, paint_shapes: bool = False) -> NDArray[np.uint8]:
-        painted = fill(self.grid, 9, self.occupied)
+        painted = canvas(0, (self.height, self.width))
+        painted = fill(painted, 9, self.occupied)
 
         if paint_shapes:
             for shape in self.shapes:
-                painted = paint(painted, shape)
+                painted = paint(painted, recolor(1, shape))
 
         return np.array(painted, dtype=np.uint8)
 

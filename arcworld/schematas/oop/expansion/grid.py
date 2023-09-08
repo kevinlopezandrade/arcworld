@@ -9,15 +9,6 @@ from arcworld.internal.constants import ALLOWED_COLORS, DoesNotFitError
 # Defintions:
 # dot := Any shape with a square bounding box
 # line := A set of adjacent dots.
-# Maybe keep a set of lines and a set of dots
-
-# Firs I need a partial order to define the order of expansions.
-# Also I need to define the overlapping policy of the lines, by default
-# it's goint to be if a<=b then the lines of b overlap the lines of a.
-# Makes coding easier.
-
-# Also I need to define a delimiter policy, what happens when a line intersects
-# another line, or a dot, should stop expanding or what.
 
 
 class LinesGrid(BSTGridBruteForce):
@@ -52,10 +43,12 @@ class LinesGrid(BSTGridBruteForce):
             (i, orig[1]) for i in range(self.height)
         )
 
-        # Occupy negatie diagonal
+        # Occupy negative diagonal
         self.occupied = self.occupied | frozenset(
             cast(Coordinate, add(orig, multiply(i, (1, 1))))
-            for i in range(1, min(self.height - orig[0], self.width - orig[1]))
+            for i in range(
+                1, min(self.height - 1 - orig[0], self.width - 1 - orig[1]) + 1
+            )
         )
 
         self.occupied = self.occupied | frozenset(
@@ -66,12 +59,12 @@ class LinesGrid(BSTGridBruteForce):
         # Occupy positive diagonal
         self.occupied = self.occupied | frozenset(
             cast(Coordinate, add(orig, multiply(i, (-1, 1))))
-            for i in range(1, max(orig[0], orig[1]) + 1)
+            for i in range(1, min(orig[0], self.width - 1 - orig[1]) + 1)
         )
 
         self.occupied = self.occupied | frozenset(
             cast(Coordinate, add(orig, multiply(i, (1, -1))))
-            for i in range(1, max(self.height - orig[0], self.width - orig[1]))
+            for i in range(1, min(self.height - 1 - orig[0], orig[1]) + 1)
         )
 
         return shifted_shape

@@ -16,7 +16,8 @@ def draw_standard_line(
     Draws a line starting from the center of mass of the shape. Each dot in the line
     is a pixel with the same color as the original shape. Intersection with a shape
     is defined only if a dot of the current expansion intersects with a cell of the
-    shape, not with its bounding box.
+    shape, not with its bounding box. The line is drawed until the limits of the
+    grid.
     """
     start = centerofmass(backdrop(shape))
     h = grid.height
