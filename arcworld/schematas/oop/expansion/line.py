@@ -40,9 +40,12 @@ def draw_standard_line(
         new_line.add(dot)
 
         if len({dot[1]} & grid.occupied) > 0:
-            for shape in grid.shapes:
-                if len({dot} & toindices(shape)) > 0:
-                    shape_policy(frozenset({dot}), shape, grid)
+            for candidate_shape in grid.shapes:
+                if (
+                    len({dot[1]} & toindices(candidate_shape)) > 0
+                    and candidate_shape != shape
+                ):
+                    shape_policy(frozenset({dot}), candidate_shape, grid)
         else:
             intersected = False
             for line in grid.lines:
@@ -93,9 +96,12 @@ def draw_dotted_line(
             new_line.add(dot)
 
             if len({dot[1]} & grid.occupied) > 0:
-                for shape in grid.shapes:
-                    if len({dot} & toindices(shape)) > 0:
-                        shape_policy(frozenset({dot}), shape, grid)
+                for candidate_shape in grid.shapes:
+                    if (
+                        len({dot[1]} & toindices(candidate_shape)) > 0
+                        and candidate_shape != shape
+                    ):
+                        shape_policy(frozenset({dot}), candidate_shape, grid)
             else:
                 intersected = False
                 for line in grid.lines:
@@ -149,9 +155,12 @@ def draw_dashed_line(
             new_line.add(dot)
 
             if len({dot[1]} & grid.occupied) > 0:
-                for shape in grid.shapes:
-                    if len({dot} & toindices(shape)) > 0:
-                        shape_policy(frozenset({dot}), shape, grid)
+                for candidate_shape in grid.shapes:
+                    if (
+                        len({dot[1]} & toindices(candidate_shape)) > 0
+                        and candidate_shape != shape
+                    ):
+                        shape_policy(frozenset({dot}), candidate_shape, grid)
             else:
                 intersected = False
                 for line in grid.lines:
@@ -213,9 +222,12 @@ def draw_dashed_dot_line(
             new_line.add(dot)
 
             if len({dot[1]} & grid.occupied) > 0:
-                for shape in grid.shapes:
-                    if len({dot} & toindices(shape)) > 0:
-                        shape_policy(frozenset({dot}), shape, grid)
+                for candidate_shape in grid.shapes:
+                    if (
+                        len({dot[1]} & toindices(candidate_shape)) > 0
+                        and candidate_shape != shape
+                    ):
+                        shape_policy(frozenset({dot}), candidate_shape, grid)
             else:
                 intersected = False
                 for line in grid.lines:
@@ -264,9 +276,12 @@ def draw_hidden_line(
         new_hidden_line.add(dot)
 
         if len({dot[1]} & grid.occupied) > 0:
-            for shape in grid.shapes:
-                if len({dot} & toindices(shape)) > 0:
-                    shape_policy(frozenset({dot}), shape, grid)
+            for candidate_shape in grid.shapes:
+                if (
+                    len({dot[1]} & toindices(candidate_shape)) > 0
+                    and candidate_shape != shape
+                ):
+                    shape_policy(frozenset({dot}), candidate_shape, grid)
         else:
             intersected = False
             for line in grid.lines:
@@ -280,3 +295,11 @@ def draw_hidden_line(
         start = dot[1]
 
     grid.lines.append(frozenset(new_hidden_line))
+
+
+STYLES = {
+    "standard": draw_standard_line,
+    "dashed": draw_dashed_line,
+    "dotted": draw_dotted_line,
+    "dashdot": draw_dashed_dot_line,
+}
