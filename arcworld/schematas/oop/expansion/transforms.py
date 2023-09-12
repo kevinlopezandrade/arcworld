@@ -10,7 +10,7 @@ from arcworld.schematas.oop.expansion.intersection_line import POLICIES as LINE_
 from arcworld.schematas.oop.expansion.intersection_shape import (
     POLICIES as SHAPE_POLICIES,
 )
-from arcworld.schematas.oop.expansion.line import STYLES
+from arcworld.schematas.oop.expansion.line import STYLES, expand_shape
 
 # TODO: I need to define what happens when I intersect an object and transform it.
 # Should I update as a new unit of dot, or should I transform an not update anything ?
@@ -121,3 +121,33 @@ class StandardExpansion:
             )
 
         return sampler
+
+
+class ObjectsExpansion(StandardExpansion):
+    @property
+    def filters(self) -> List[ShapesFilter]:
+        filter = FunctionalFilter(name="IS_BBOX_ODD", func=is_bbox_odd)
+
+        return [filter]
+
+    def transform(self, input_grid: LinesGrid) -> LinesGrid:
+        grid = input_grid.clone_no_shapes()
+        for shape in input_grid.shapes:
+            grid.add_shape(shape, no_bbox=True)
+
+        shapes = grid.shapes[::-1]
+        visited = [False for _ in shapes]
+
+        for i in range(len(shapes)):
+            for dir in self.directions:
+                expand_shape(
+                    i,
+                    shapes,
+                    visited,
+                    self.DIRECTIONS[dir],
+                    grid,
+                    LINE_POLICIES[self.line_policy],
+                    SHAPE_POLICIES[self.shape_policy],
+                )
+
+        return grid

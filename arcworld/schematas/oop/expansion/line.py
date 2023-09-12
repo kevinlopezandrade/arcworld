@@ -1,6 +1,6 @@
-from typing import Callable, Set, Tuple, cast
+from typing import Callable, List, Set, Tuple, cast
 
-from arcworld.dsl.arc_types import Coordinate, Shape
+from arcworld.dsl.arc_types import Cell, Coordinate, Shape
 from arcworld.dsl.functional import (
     add,
     backdrop,
@@ -18,7 +18,7 @@ def draw_standard_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], None],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
 ):
     """
     Draws a line starting from the center of mass of the shape. Each dot in the line
@@ -48,17 +48,18 @@ def draw_standard_line(
                     shape_policy(frozenset({dot}), candidate_shape, grid)
         else:
             intersected = False
-            for line in grid.lines:
-                if len({dot[1]} & toindices(line)) > 0:
-                    line_policy(frozenset({dot}), line, grid)
-                    intersected = True
+            for _, v in grid.lines.items():
+                for line in v:
+                    if {dot[1]} & toindices(line):
+                        line_policy(frozenset({dot}), line, grid)
+                        intersected = True
 
             if not intersected:
                 grid.grid = paint(grid.grid, frozenset({dot}))
 
         start = dot[1]
 
-    grid.lines.append(frozenset(new_line))
+    grid.lines[shape] = grid.lines[shape] | {frozenset(new_line)}
 
 
 def draw_dotted_line(
@@ -66,7 +67,7 @@ def draw_dotted_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], None],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
 ):
     """
     Draws a dotted line starting from the center of mass of the shape. Each
@@ -104,10 +105,11 @@ def draw_dotted_line(
                         shape_policy(frozenset({dot}), candidate_shape, grid)
             else:
                 intersected = False
-                for line in grid.lines:
-                    if len({dot[1]} & toindices(line)) > 0:
-                        line_policy(frozenset({dot}), line, grid)
-                        intersected = True
+                for _, v in grid.lines.items():
+                    for line in v:
+                        if {dot[1]} & toindices(line):
+                            line_policy(frozenset({dot}), line, grid)
+                            intersected = True
 
                 if not intersected:
                     grid.grid = paint(grid.grid, frozenset({dot}))
@@ -115,7 +117,7 @@ def draw_dotted_line(
             start = dot[1]
             state = 0
 
-    grid.lines.append(frozenset(new_line))
+    grid.lines[shape] = grid.lines[shape] | {frozenset(new_line)}
 
 
 def draw_dashed_line(
@@ -123,7 +125,7 @@ def draw_dashed_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], None],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
 ):
     """
     Draws a dashed line starting from the center of mass of the shape. Each
@@ -163,10 +165,11 @@ def draw_dashed_line(
                         shape_policy(frozenset({dot}), candidate_shape, grid)
             else:
                 intersected = False
-                for line in grid.lines:
-                    if len({dot[1]} & toindices(line)) > 0:
-                        line_policy(frozenset({dot}), line, grid)
-                        intersected = True
+                for _, v in grid.lines.items():
+                    for line in v:
+                        if {dot[1]} & toindices(line):
+                            line_policy(frozenset({dot}), line, grid)
+                            intersected = True
 
                 if not intersected:
                     grid.grid = paint(grid.grid, frozenset({dot}))
@@ -177,7 +180,7 @@ def draw_dashed_line(
             elif state == "C":
                 state = "A"
 
-    grid.lines.append(frozenset(new_line))
+    grid.lines[shape] = grid.lines[shape] | {frozenset(new_line)}
 
 
 def draw_dashed_dot_line(
@@ -185,7 +188,7 @@ def draw_dashed_dot_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], None],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
 ):
     """
     Draws a dashed dotted line starting from the center of mass of the shape. Each
@@ -230,10 +233,11 @@ def draw_dashed_dot_line(
                         shape_policy(frozenset({dot}), candidate_shape, grid)
             else:
                 intersected = False
-                for line in grid.lines:
-                    if len({dot[1]} & toindices(line)) > 0:
-                        line_policy(frozenset({dot}), line, grid)
-                        intersected = True
+                for _, v in grid.lines.items():
+                    for line in v:
+                        if {dot[1]} & toindices(line):
+                            line_policy(frozenset({dot}), line, grid)
+                            intersected = True
 
                 if not intersected:
                     grid.grid = paint(grid.grid, frozenset({dot}))
@@ -246,7 +250,7 @@ def draw_dashed_dot_line(
             elif state == "E":
                 state = "A"
 
-    grid.lines.append(frozenset(new_line))
+    grid.lines[shape] = grid.lines[shape] | {frozenset(new_line)}
 
 
 def draw_hidden_line(
@@ -254,7 +258,7 @@ def draw_hidden_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], None],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
 ):
     """
     Draws a hidden line starting from the center of mass of the shape. Each dot in
@@ -284,17 +288,80 @@ def draw_hidden_line(
                     shape_policy(frozenset({dot}), candidate_shape, grid)
         else:
             intersected = False
-            for line in grid.lines:
-                if len({dot[1]} & toindices(line)) > 0:
-                    line_policy(frozenset({dot}), line, grid)
-                    intersected = True
+            for _, v in grid.lines.items():
+                for line in v:
+                    if {dot[1]} & toindices(line):
+                        line_policy(frozenset({dot}), line, grid)
+                        intersected = True
 
             if not intersected:
                 grid.grid = paint(grid.grid, recolor(grid.bg_color, frozenset({dot})))
 
         start = dot[1]
 
-    grid.lines.append(frozenset(new_hidden_line))
+    grid.lines[shape] = grid.lines[shape] | {frozenset(new_hidden_line)}
+
+
+def expand_shape(
+    index: int,
+    shapes: List[Shape],
+    visited: List[bool],
+    direction: Coordinate,
+    grid: LinesGrid,
+    line_policy: Callable[[Shape, Shape, LinesGrid], None],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
+):
+    shape = shapes[index]
+
+    if len(shape) == 0:
+        return
+
+    start = centerofmass(backdrop(shape))
+    h = grid.height
+    w = grid.width
+    c = color(shape)
+
+    new_line: Set[Tuple[int, Coordinate]] = set()
+
+    while 0 <= add(start, direction)[0] < h and 0 <= add(start, direction)[1] < w:
+        dot = cast(Coordinate, add(start, direction))
+        dot = (c, dot)
+        new_line.add(dot)
+
+        # Intersection with a shape.
+        if {dot[1]} & grid.occupied:
+            for i, candidate_shape in enumerate(shapes):
+                if candidate_shape == shape:
+                    continue
+
+                if visited[i]:
+                    continue
+
+                # Update shapes array.
+                if {dot[1]} & toindices(candidate_shape):
+                    shapes[i] = shape_policy(frozenset({dot}), candidate_shape, grid)
+                    visited[i] = True
+
+                    # A transformation can change a shape, leaving the cell
+                    # where they intersect empty or as a line, which should be
+                    # then follow the line policy. So start again from the same
+                    # position, the visited boolean array ensures not infinete
+                    # loop.
+                    dot = cast(Cell, (c, start))
+        else:
+            intersected = False
+            for _, v in grid.lines.items():
+                for line in v:
+                    if {dot[1]} & toindices(line):
+                        line_policy(frozenset({dot}), line, grid)
+                        intersected = True
+
+            if not intersected:
+                grid.grid = paint(grid.grid, frozenset({dot}))
+
+        start = dot[1]
+
+    grid.lines[shape] = grid.lines[shape] | {frozenset(new_line)}
 
 
 STYLES = {

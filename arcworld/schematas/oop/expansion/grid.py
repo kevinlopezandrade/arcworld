@@ -1,5 +1,6 @@
 import random
-from typing import List, Set, cast
+from collections import defaultdict
+from typing import Dict, Set, cast
 
 from arcworld.dsl.arc_types import Coordinate, Shape, Shapes
 from arcworld.dsl.functional import add, centerofmass, color, multiply
@@ -21,10 +22,10 @@ class LinesGrid(BSTGridBruteForce):
         mode: BinaryRelation = BinaryRelation.BelowOf,
     ) -> None:
         super().__init__(h, w, bg_color, margin, mode)
-        self._lines: List[Shape] = []
+        self._lines: Dict[Shape, Shapes] = defaultdict(frozenset)
 
     @property
-    def lines(self) -> List[Shape]:
+    def lines(self) -> Dict[Shape, Shapes]:
         return self._lines
 
     def place_shape_random(
