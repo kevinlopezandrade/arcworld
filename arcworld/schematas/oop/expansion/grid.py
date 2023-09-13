@@ -54,32 +54,40 @@ class LinesGrid(BSTGridBruteForce):
         lines: Coordinates = frozenset()
 
         # Occupy horizontal bar
-        if directions & {"W", "E"}:
-            lines = lines | frozenset((orig[0], i) for i in range(width))
+        if directions & {"W"}:
+            lines = lines | frozenset((orig[0], i) for i in range(orig[1]))
+
+        if directions & {"E"}:
+            lines = lines | frozenset((orig[0], i) for i in range(orig[1] + 1, width))
 
         # Occupy vertical bar
-        if directions & {"N", "S"}:
-            lines = lines | frozenset((i, orig[1]) for i in range(height))
+        if directions & {"N"}:
+            lines = lines | frozenset((i, orig[1]) for i in range(orig[0]))
+
+        if directions & {"S"}:
+            lines = lines | frozenset((i, orig[1]) for i in range(orig[0] + 1, height))
 
         # Occupy negative diagonal
-        if directions & {"NW", "SE"}:
+        if directions & {"SE"}:
             lines = lines | frozenset(
                 cast(Coordinate, add(orig, multiply(i, (1, 1))))
                 for i in range(1, min(height - 1 - orig[0], width - 1 - orig[1]) + 1)
             )
 
+        if directions & {"NW"}:
             lines = lines | frozenset(
                 cast(Coordinate, add(orig, multiply(i, (-1, -1))))
                 for i in range(1, min(orig[0], orig[1]) + 1)
             )
 
         # Occupy positive diagonal
-        if directions & {"NE", "SW"}:
+        if directions & {"NE"}:
             lines = lines | frozenset(
                 cast(Coordinate, add(orig, multiply(i, (-1, 1))))
                 for i in range(1, min(orig[0], width - 1 - orig[1]) + 1)
             )
 
+        if directions & {"SW"}:
             lines = lines | frozenset(
                 cast(Coordinate, add(orig, multiply(i, (1, -1))))
                 for i in range(1, min(height - 1 - orig[0], orig[1]) + 1)
