@@ -18,7 +18,7 @@ def draw_standard_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
 ):
     """
     Draws a line starting from the center of mass of the shape. Each dot in the line
@@ -67,7 +67,7 @@ def draw_dotted_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
 ):
     """
     Draws a dotted line starting from the center of mass of the shape. Each
@@ -125,7 +125,7 @@ def draw_dashed_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
 ):
     """
     Draws a dashed line starting from the center of mass of the shape. Each
@@ -188,7 +188,7 @@ def draw_dashed_dot_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
 ):
     """
     Draws a dashed dotted line starting from the center of mass of the shape. Each
@@ -258,7 +258,7 @@ def draw_hidden_line(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
 ):
     """
     Draws a hidden line starting from the center of mass of the shape. Each dot in
@@ -309,7 +309,7 @@ def expand_shape(
     direction: Coordinate,
     grid: LinesGrid,
     line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Shape],
+    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
 ):
     shape = shapes[index]
 
@@ -339,7 +339,16 @@ def expand_shape(
 
                 # Update shapes array.
                 if {dot[1]} & toindices(candidate_shape):
-                    shapes[i] = shape_policy(frozenset({dot}), candidate_shape, grid)
+                    # shapes[i] = shape_policy(frozenset({dot}), candidate_shape, grid)
+                    new_shape, keep_base_shape = shape_policy(
+                        frozenset({dot}), candidate_shape, grid
+                    )
+
+                    if keep_base_shape:
+                        shapes[i] = candidate_shape
+                    else:
+                        shapes[i] = new_shape
+
                     visited[i] = True
 
                     # A transformation can change a shape, leaving the cell

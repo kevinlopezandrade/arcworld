@@ -12,10 +12,6 @@ from arcworld.schematas.oop.expansion.intersection_shape import (
 )
 from arcworld.schematas.oop.expansion.line import STYLES, expand_shape
 
-# TODO: I need to define what happens when I intersect an object and transform it.
-# Should I update as a new unit of dot, or should I transform an not update anything ?
-# For example assume a policy where I delete an object if I intersect it.
-
 
 def is_bbox_odd(shape: Shape) -> bool:
     bbox = backdrop(shape)
@@ -81,7 +77,10 @@ class StandardExpansion:
             self.shape_policy = random.choice(list(SHAPE_POLICIES.keys()))
 
         self.program = (
-            f"{'_'.join(self.directions)}_{self.line_policy}_{self.shape_policy}"
+            f"{'_'.join(self.directions)}"
+            f"_{self.linestyle}"
+            f"_{self.line_policy}"
+            f"_{self.shape_policy}"
         )
 
     @property
