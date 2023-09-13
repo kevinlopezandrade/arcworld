@@ -1,11 +1,15 @@
 import random
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from arcworld.dsl.arc_types import Shape
 from arcworld.dsl.functional import backdrop, height, width
 from arcworld.filters.functional.shape_filter import FunctionalFilter
 from arcworld.filters.objects_filter import ShapesFilter
-from arcworld.schematas.oop.expansion.grid import ExpansionGridBuilder, LinesGrid
+from arcworld.schematas.oop.expansion.grid import (
+    ExpansionGridBuilder,
+    IntersectionGridBuilder,
+    LinesGrid,
+)
 from arcworld.schematas.oop.expansion.intersection_line import POLICIES as LINE_POLICIES
 from arcworld.schematas.oop.expansion.intersection_shape import (
     POLICIES as SHAPE_POLICIES,
@@ -50,7 +54,7 @@ class StandardExpansion:
     def __init__(
         self,
         linestyle: Optional[str] = None,
-        directions: Optional[List[str]] = None,
+        directions: Optional[Set[str]] = None,
         line_policy: Optional[str] = None,
         shape_policy: Optional[str] = None,
     ) -> None:
@@ -60,11 +64,9 @@ class StandardExpansion:
             self.linestyle = random.choice(list(STYLES.keys()))
 
         if directions:
-            self.directions = directions
+            self.directions = set(directions)
         else:
-            self.directions: List[str] = random.sample(
-                list(self.DIRECTIONS.keys()), k=2
-            )
+            self.directions = set(random.sample(list(self.DIRECTIONS.keys()), k=2))
 
         if line_policy:
             self.line_policy = line_policy
@@ -128,6 +130,24 @@ class ObjectsExpansion(StandardExpansion):
         filter = FunctionalFilter(name="IS_BBOX_ODD", func=is_bbox_odd)
 
         return [filter]
+
+    def grid_sampler(self):
+        bg_color = random.randint(0, 9)
+
+        def sampler():
+            h = random.randint(10, 15)
+            w = random.randint(10, 15)
+            max_dots = random.randint(2, 5)
+
+            return IntersectionGridBuilder(
+                height=h,
+                width=w,
+                max_dots=max_dots,
+                bg_color=bg_color,
+                directions=self.directions,
+            )
+
+        return sampler
 
     def transform(self, input_grid: LinesGrid) -> LinesGrid:
         grid = input_grid.clone_no_shapes()
