@@ -254,19 +254,24 @@ class IntersectionGridBuilder:
         sampled_shapes = random.choices(list(shapes), k=N)
 
         placed = 0
-        state = 0
+        first = True
         for shape in sampled_shapes:
             try:
-                if state == 0:
+                coin = random.choices(population=[0, 1], weights=[0.25, 0.75], k=1)[0]
+                if first:
                     placed_shape = grid.place_shape_random(
                         shape, color_palette=self._avalaible_colors
                     )
-                    state = 1
+                    first = False
                 else:
-                    placed_shape = grid.place_shape_on_intersection(
-                        shape, color_palette=self._avalaible_colors
-                    )
-                    state = 0
+                    if coin == 0:
+                        placed_shape = grid.place_shape_random(
+                            shape, color_palette=self._avalaible_colors
+                        )
+                    else:
+                        placed_shape = grid.place_shape_on_intersection(
+                            shape, color_palette=self._avalaible_colors
+                        )
 
             except DoesNotFitError:
                 pass

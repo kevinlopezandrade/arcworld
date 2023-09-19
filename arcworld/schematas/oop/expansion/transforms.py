@@ -135,8 +135,8 @@ class ObjectsExpansion(StandardExpansion):
         bg_color = random.randint(0, 9)
 
         def sampler():
-            h = random.randint(10, 15)
-            w = random.randint(10, 15)
+            h = random.randint(10, 12)
+            w = random.randint(10, 12)
             max_dots = random.randint(2, 5)
 
             return IntersectionGridBuilder(
