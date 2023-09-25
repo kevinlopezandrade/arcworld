@@ -77,7 +77,8 @@ class DotsExpansion:
         self.shape_policy = "no_op"
 
         self.program = (
-            f"{'_'.join(sorted(self.directions))}"
+            f"{self.__class__.__name__}"
+            f"#{'_'.join(sorted(self.directions))}"
             f"#{self.linestyle}"
             f"#{self.line_policy}"
         )
@@ -110,8 +111,8 @@ class DotsExpansion:
         bg_color = random.randint(0, 9)
 
         def sampler():
-            h = random.randint(10, 15)
-            w = random.randint(10, 15)
+            h = random.randint(20, 25)
+            w = random.randint(20, 25)
             max_dots = random.randint(3, 4)
 
             return ExpansionGridBuilder(
