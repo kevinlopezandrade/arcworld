@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 from arcworld.dsl.arc_types import Coordinates, Shape
 from arcworld.dsl.functional import canvas, height, normalize, paint, recolor, width
-from arcworld.internal.constants import COLORMAP, NORM, Example, Task
+from arcworld.internal.constants import COLORMAP, NORM, TASK_DICT, Example, Task
 
 
 def decode_json_task(file_path: str) -> Task:
@@ -187,3 +187,21 @@ def plot_task(task: Task, title: Optional[str] = None):
         fig.suptitle(title)
 
     plt.show()
+
+
+def task_to_json(task: Task) -> TASK_DICT:
+    train_examples = task[:-1]
+    test_example = task[-1]
+
+    task_dict: TASK_DICT = {"train": [], "test": []}
+
+    for example in train_examples:
+        task_dict["train"].append(
+            {"input": example.input.tolist(), "output": example.output.tolist()}
+        )
+
+    task_dict["test"].append(
+        {"input": test_example.input.tolist(), "output": test_example.output.tolist()}
+    )
+
+    return task_dict

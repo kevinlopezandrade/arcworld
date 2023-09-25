@@ -35,7 +35,7 @@ def dot_filter(shape: Shape) -> bool:
         return False
 
 
-class StandardExpansion:
+class DotsExpansion:
     """
     Expands over all the dots.
     """
@@ -56,7 +56,6 @@ class StandardExpansion:
         linestyle: Optional[str] = None,
         directions: Optional[Set[str]] = None,
         line_policy: Optional[str] = None,
-        shape_policy: Optional[str] = None,
     ) -> None:
         if linestyle:
             self.linestyle = linestyle
@@ -66,23 +65,21 @@ class StandardExpansion:
         if directions:
             self.directions = set(directions)
         else:
-            self.directions = set(random.sample(list(self.DIRECTIONS.keys()), k=2))
+            self.directions = set(random.sample(list(self.DIRECTIONS.keys()), k=4))
 
         if line_policy:
             self.line_policy = line_policy
         else:
             self.line_policy = random.choice(list(LINE_POLICIES.keys()))
 
-        if shape_policy:
-            self.shape_policy = shape_policy
-        else:
-            self.shape_policy = random.choice(list(SHAPE_POLICIES.keys()))
+        # A line cannot intersect another dot in this transformation
+        # it can only intersect dots.
+        self.shape_policy = "no_op"
 
         self.program = (
-            f"{'_'.join(self.directions)}"
-            f"_{self.linestyle}"
-            f"_{self.line_policy}"
-            f"_{self.shape_policy}"
+            f"{'_'.join(sorted(self.directions))}"
+            f"#{self.linestyle}"
+            f"#{self.line_policy}"
         )
 
     @property
@@ -115,16 +112,20 @@ class StandardExpansion:
         def sampler():
             h = random.randint(10, 15)
             w = random.randint(10, 15)
-            max_dots = random.randint(2, 5)
+            max_dots = random.randint(3, 4)
 
             return ExpansionGridBuilder(
-                height=h, width=w, max_dots=max_dots, bg_color=bg_color
+                height=h,
+                width=w,
+                max_dots=max_dots,
+                bg_color=bg_color,
+                directions=self.directions,
             )
 
         return sampler
 
 
-class ObjectsExpansion(StandardExpansion):
+class ObjectsExpansion(DotsExpansion):
     @property
     def filters(self) -> List[ShapesFilter]:
         filter = FunctionalFilter(name="IS_BBOX_ODD", func=is_bbox_odd)

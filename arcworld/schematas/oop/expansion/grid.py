@@ -179,20 +179,28 @@ class LinesGrid(BSTGridBruteForce):
 
 class ExpansionGridBuilder:
     def __init__(
-        self, height: int = 20, width: int = 20, bg_color: int = 0, max_dots: int = 5
+        self,
+        height: int = 20,
+        width: int = 20,
+        bg_color: int = 0,
+        max_dots: int = 5,
+        directions: Set[str] | None = None,
     ) -> None:
         self.height = height
         self.width = width
         self.max_dots = max_dots
         self.bg_color = bg_color
 
+        self._directions = directions
         self._avalaible_colors = ALLOWED_COLORS - {bg_color}
 
     def _base_form(self):
         """
         Base form of the grid.
         """
-        grid = LinesGrid(self.height, self.width, bg_color=self.bg_color)
+        grid = LinesGrid(
+            self.height, self.width, bg_color=self.bg_color, directions=self._directions
+        )
 
         return grid
 
