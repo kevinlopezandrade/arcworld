@@ -133,7 +133,7 @@ def get_max_dimension_filter(dim: float) -> Callable[[Shape], bool]:
 class DropBidirectional(GridsNewTransform):
     def __init__(self, max_shape_dimesion: float = 3) -> None:
         self._max_shape_dimension = max_shape_dimesion
-        super().__init__()
+        self.program = self.__class__.__name__
 
     @property
     def filters(self) -> List[ShapesFilter]:
@@ -148,8 +148,8 @@ class DropBidirectional(GridsNewTransform):
 
     def grid_sampler(
         self,
-        grid_dimensions_range: Tuple[int, int] = (10, 30),
-        max_shapes_range: Tuple[float, float] = (math.inf, math.inf),
+        grid_dimensions_range: Tuple[int, int] = (20, 25),
+        max_shapes_range: Tuple[float, float] = (5, 15),
         bar_orientations: Tuple[BarOrientation, ...] = (
             BarOrientation.H,
             BarOrientation.V,
@@ -304,7 +304,7 @@ class DropBidirectional(GridsNewTransform):
 
 class DropBidirectionalDots(DropBidirectional):
     def __init__(self) -> None:
-        pass
+        self.program = self.__class__.__name__
 
     @property
     def filters(self) -> List[ShapesFilter]:
@@ -322,8 +322,8 @@ class DropBidirectionalDots(DropBidirectional):
         bar_color = random.choice(list(ALLOWED_COLORS - {bg_color}))
 
         def sampler():
-            h = random.randint(10, 30)
-            w = random.randint(10, 30)
+            h = random.randint(20, 25)
+            w = random.randint(20, 25)
             max_shapes = random.randint(5, 20)
             bar_orientation = random.choice([BarOrientation.H, BarOrientation.V])
             holes_fraction = random.uniform(0, 0.5)
@@ -385,8 +385,8 @@ class DropBidirectionalDots(DropBidirectional):
 class Gravitate(DropBidirectional):
     def grid_sampler(
         self,
-        grid_dimensions_range: Tuple[int, int] = (10, 30),
-        max_shapes_range: Tuple[float, float] = (math.inf, math.inf),
+        grid_dimensions_range: Tuple[int, int] = (20, 25),
+        max_shapes_range: Tuple[float, float] = (5, 15),
         bar_orientations: Tuple[BarOrientation, ...] = (
             BarOrientation.H,
             BarOrientation.V,

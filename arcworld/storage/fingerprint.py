@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 from arcworld.internal.constants import Example, Task
 
-MAX_PAIRS = 12
+MAX_PAIRS = 4
 
 
 def _all_permutations(pre: Task, post: Task, res: List[Task]):
