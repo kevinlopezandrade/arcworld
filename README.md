@@ -6,13 +6,9 @@ You can find an small example of the API in **example.py**.
 ## TODO
 - [ ] Get rid of the deprecated module.
 - [ ] Make it compliant with the static type checker Pyright or Mypy and add it as a pre-commit hook.
-- [ ] Split the dsl/functional.py into two modules.
 - [ ] Define a common strategy for Task Generation, after the Grid is sampled.
 - [ ] Document all the modules.
-- [ ] For the modules that use the DSL implement the mixers and implement the code generation module.
-- [x] Implement the resampling strategies for the subgrid pickup.
 - [ ] Remove flak8: noqa from the files of the previous modules.
-- [x] Add environment.yaml and a setup.py to make it possible to use pip install -e (developer mode)
 
 ## Development
 We recommend using [conda](https://docs.conda.io/en/latest/) as a virtual
@@ -53,14 +49,5 @@ $ pre-commit install
 ## Datasets
 
 ### Task
-Tasks are stored in an SQLite database inside 'datasets/tasks.db'.
-Before fetching the database you need to install
-[git-lfs](https://github.com/git-lfs/git-lfs).
-
-And then run
-```shell
-$ git lfs fetch
-```
-
-## Examples
-Python scripts with examples can be found in the *examples/* directory.
+Tasks can be generated and stored in an SQLite database, please
+take a look at the examples/ directory
