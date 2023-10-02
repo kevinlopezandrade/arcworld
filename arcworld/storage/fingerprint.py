@@ -38,6 +38,12 @@ def hash_task(task: Task) -> str:
 
 
 def normalize_task(task: Task) -> NDArray[np.uint8]:
+    """
+    Given a task normalize the task examples so that all of them are placed
+    at the top left corner of a 30x30 grid. We use 255 as value to flag a pixel
+    not being part of the task. Dimensions: [N_Example, 0 | 1, 30, 30], where
+    0 := input, 1 := output. e.g To get output of the example 2, X[1, 1, :, :]
+    """
     N = len(task)  # noqa
 
     if N > MAX_PAIRS:
