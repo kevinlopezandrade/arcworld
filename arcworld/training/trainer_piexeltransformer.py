@@ -23,7 +23,7 @@ if __name__ == "__main__":
     model = PixelTransformer().to(device)
     model.train()
 
-    image_accuracy_metric = torchmetrics.Accuracy(task="multiclass", num_classes=10).to(
+    image_accuracy_metric = torchmetrics.Accuracy(task="multiclass", num_classes=11).to(
         device
     )
     img_loss_metric = torchmetrics.MeanMetric().to(device)
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(params, lr=0.0001)
     ce_loss = nn.CrossEntropyLoss(
-        weight=torch.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 1], device=device).float()
+        weight=torch.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.1], device=device).float()
     )
     binary_ce_loss = nn.BCEWithLogitsLoss()
     sigmoid = nn.Sigmoid()

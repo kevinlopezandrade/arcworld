@@ -15,16 +15,16 @@ class Embedding2d(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(
-            10, 10, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+            11, 11, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
         self.conv2 = nn.Conv2d(
-            10, 16, kernel_size=3, stride=1, padding=1, padding_mode="zeros"
+            11, 15, kernel_size=3, stride=1, padding=1, padding_mode="zeros"
         )
         self.conv3 = nn.Conv2d(
-            10, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
+            11, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
         )
         self.conv4 = nn.Conv2d(
-            10, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
+            11, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -40,7 +40,7 @@ class Output2d(nn.Module):
         super().__init__()
 
         self.conv = nn.Conv2d(
-            d_model, 10, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+            d_model, 11, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -141,6 +141,8 @@ class PixelTransformer(nn.Module):
             tgt: Tensor with shape [B, C, H, W]
         """
         b, s, c, h, w = src.shape
+        src = src.permute(1, 0, 2, 3, 4)
+
         n_train_examples = s // 2
 
         src = self.embedding2d(src.reshape(s * b, c, h, w))

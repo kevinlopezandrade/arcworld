@@ -83,6 +83,12 @@ def _find_bounds(array: NDArray[np.uint8]) -> Tuple[int, int]:
     return (h_bound, w_bound)
 
 
+def decode_normalized_grid(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    h, w = _find_bounds(grid)
+
+    return grid[:h, :w]
+
+
 def decode_normalized_task(task_normalized: NDArray[np.uint8]) -> Task:
     """
     Given a numpy array, where each example is normalized to fit into a 2x30x30 grid,
