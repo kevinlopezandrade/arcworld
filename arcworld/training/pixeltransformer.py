@@ -15,16 +15,16 @@ class Embedding2d(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(
-            10, 11, kernel_size=1, stride=1, padding=0, padding_mode="replicate"
+            10, 10, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
         self.conv2 = nn.Conv2d(
-            10, 15, kernel_size=3, stride=1, padding=1, padding_mode="replicate"
+            10, 16, kernel_size=3, stride=1, padding=1, padding_mode="zeros"
         )
         self.conv3 = nn.Conv2d(
-            10, 20, kernel_size=5, stride=1, padding=2, padding_mode="replicate"
+            10, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
         )
         self.conv4 = nn.Conv2d(
-            10, 33, kernel_size=11, stride=1, padding=5, padding_mode="replicate"
+            10, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -40,7 +40,7 @@ class Output2d(nn.Module):
         super().__init__()
 
         self.conv = nn.Conv2d(
-            d_model, 10, kernel_size=1, stride=1, padding=0, padding_mode="replicate"
+            d_model, 10, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -54,6 +54,7 @@ class PositionalEncoding2d(nn.Module):
         self.register_buffer("pe", pe)
 
     def forward(self, seq):
+        print(seq.shape, self.pe.shape)
         return seq + self.pe
 
 
@@ -149,6 +150,7 @@ class PixelTransformer(nn.Module):
         tgt = torch.concatenate(
             (tgt, self.inp_out_channel[0].expand(b, -1, -1, -1)), dim=1
         )
+        tgt = self.pos_encoding(tgt)
 
         src = src.view(s, b, self.d_model - 1, h, w)
         total_memory = None
@@ -166,7 +168,9 @@ class PixelTransformer(nn.Module):
                 .contiguous()
                 .view(h * w * 2, b, self.d_model)
             )
-            memory = self.encoder(src_subset)  # 2048 len seq, 2 batch size, 80 d model
+
+            # Encoders in Pytorch expect by default the batch at the second dimension.
+            memory = self.encoder(src_subset)  # 1800 len seq, 2 batch size, 80 d model
 
             if total_memory is None:
                 total_memory = memory

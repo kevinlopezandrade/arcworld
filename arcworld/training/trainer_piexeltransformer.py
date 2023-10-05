@@ -7,7 +7,7 @@ from arcworld.training.pixeltransformer import PixelTransformer
 from arcworld.training.transformer_total_loader import TransformerOriginalDataset
 
 if __name__ == "__main__":
-    batch_size = 2
+    batch_size = 4
     device = torch.device("cuda")
     dataset = TransformerOriginalDataset(
         "/home/kevin/arcworld/examples/expansion/tasks"
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     model = PixelTransformer().to(device)
     model.train()
 
-    image_accuracy_metric = torchmetrics.Accuracy(task="multiclass", num_classes=11).to(
+    image_accuracy_metric = torchmetrics.Accuracy(task="multiclass", num_classes=10).to(
         device
     )
     img_loss_metric = torchmetrics.MeanMetric().to(device)
