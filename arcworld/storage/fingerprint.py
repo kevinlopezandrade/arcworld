@@ -40,7 +40,7 @@ def hash_task(task: Task) -> str:
 def normalize_task(task: Task) -> NDArray[np.uint8]:
     """
     Given a task normalize the task examples so that all of them are placed
-    at the top left corner of a 30x30 grid. We use 255 as value to flag a pixel
+    at the top left corner of a 30x30 grid. We use 10 as value to flag a pixel
     not being part of the task. Dimensions: [N_Example, 0 | 1, 30, 30], where
     0 := input, 1 := output. e.g To get output of the example 2, X[1, 1, :, :]
     """
@@ -51,10 +51,10 @@ def normalize_task(task: Task) -> NDArray[np.uint8]:
 
     res = np.empty(shape=(MAX_PAIRS, 2, 30, 30), dtype=np.uint8)
 
-    # TODO: We use the 255 value as a flag. Maybe I need
+    # TODO: We use the 10 value as a flag. Maybe I need
     # to test if the examples contain values that are not
     # within [0, 9].
-    res.fill(255)
+    res.fill(10)
 
     for i in range(N):
         res[i, 0, : task[i].input.shape[0], : task[i].input.shape[1]] = task[i].input
@@ -65,19 +65,19 @@ def normalize_task(task: Task) -> NDArray[np.uint8]:
 
 def _find_bounds(array: NDArray[np.uint8]) -> Tuple[int, int]:
     """
-    Returns indices of the first 255 value found in the first and second
+    Returns indices of the first 10 value found in the first and second
     dimension.
     """
     h_bound = 0
     for i in range(array.shape[0]):
-        if array[i, 0] < 255:
+        if array[i, 0] < 10:
             h_bound += 1
         else:
             break
 
     w_bound = 0
     for i in range(array.shape[1]):
-        if array[0, i] < 255:
+        if array[0, i] < 10:
             w_bound += 1
 
     return (h_bound, w_bound)

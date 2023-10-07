@@ -1,0 +1,10 @@
+defaults:
+  - _self_
+  - dataset: translate_rotate
+  - optim: adamw
+
+user: kevinlo
+project: pixeltransformer
+epochs: 1
+bs: 4
+device: cuda

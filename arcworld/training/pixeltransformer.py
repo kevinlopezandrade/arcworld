@@ -54,7 +54,6 @@ class PositionalEncoding2d(nn.Module):
         self.register_buffer("pe", pe)
 
     def forward(self, seq):
-        print(seq.shape, self.pe.shape)
         return seq + self.pe
 
 

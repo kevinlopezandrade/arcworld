@@ -74,7 +74,7 @@ def plot_proto_shape(proto_shape: Coordinates):
     plot_shape(shape)
 
 
-def plot_grid(grid: NDArray[np.uint8]):
+def plot_grid(grid: NDArray[np.uint8], return_fig: bool = False):
     fig, axe = plt.subplots()
 
     axe.imshow(grid, cmap=COLORMAP, norm=NORM)
@@ -85,10 +85,13 @@ def plot_grid(grid: NDArray[np.uint8]):
     axe.set_yticklabels([])
     axe.set_xticklabels([])
 
-    plt.show()
+    if return_fig:
+        return fig
+    else:
+        plt.show()
 
 
-def plot_grids(*grids):
+def plot_grids(*grids, return_fig: bool = False):
     fig, axes = plt.subplots(1, len(grids))
 
     for i, grid in enumerate(grids):
@@ -101,7 +104,10 @@ def plot_grids(*grids):
         axes[i].set_yticklabels([])
         axes[i].set_xticklabels([])
 
-    plt.show()
+    if return_fig:
+        return fig
+    else:
+        plt.show()
 
 
 def plot_json_task(file_path: str):
@@ -151,7 +157,7 @@ def plot_json_task(file_path: str):
     plt.show()
 
 
-def plot_task(task: Task, title: Optional[str] = None):
+def plot_task(task: Task, title: Optional[str] = None, return_fig: bool = False):
     """
     Plots a task in the json format given by the original ARC dataset,
     where only train tasks appears.
@@ -186,7 +192,10 @@ def plot_task(task: Task, title: Optional[str] = None):
     if title:
         fig.suptitle(title)
 
-    plt.show()
+    if return_fig:
+        return fig
+    else:
+        plt.show()
 
 
 def task_to_json(task: Task) -> TASK_DICT:

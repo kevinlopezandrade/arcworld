@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F  # noqa
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
-from tqdm import tqdm
 
 from arcworld.internal.constants import Task
 from arcworld.storage.fingerprint import decode_normalized_grid, normalize_task
@@ -18,10 +17,11 @@ def _read_arc_json_files(path: str) -> List[Task]:
     Given a directory path returns a list of arc
     Tasks.
     """
+    print("Decoding tasks ...")
     files = sorted(os.listdir(path))
 
     tasks: List[Task] = []
-    for file in tqdm(files):
+    for file in files:
         try:
             task = decode_json_task(os.path.join(path, file))
         except Exception as e:
@@ -49,23 +49,19 @@ def _encode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
         if it has that color. Where c is in 0<=c<=9.
     """
     new_grid = np.zeros((11, *grid.shape), dtype=np.uint8)
-    for color in range(0, 10):
+    for color in range(0, 11):
         x, y = np.where(grid == color)
         new_grid[color, x, y] = 1
-
-    # Padding channel.
-    x, y = np.where(grid == 255)
-    new_grid[10, x, y] = 1
 
     return new_grid
 
 
-def _decode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
+def decode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
     _, h, w = grid.shape
     decoded_grid = np.zeros(shape=(h, w), dtype=np.uint8)
 
-    for i, color in enumerate(list(range(0, 10)) + [255]):
-        decoded_grid = decoded_grid + (color * grid[i, :, :])
+    for color in range(0, 11):
+        decoded_grid = decoded_grid + (color * grid[color, :, :])
 
     decoded_grid = decode_normalized_grid(decoded_grid)
 
@@ -84,7 +80,7 @@ class TransformerOriginalDataset(Dataset):
         """
         A normalized task is a multidimensional array, where the shape is as follows:
         [N_Example, 0 | 1, 30, 30], where 0 := input example, 1 := output example.
-        The value 255 marks a coordinate not belonging to the grid.
+        The value 10 marks a coordinate not belonging to the grid.
 
         Returns:
             X: Tensor with shape [N_input_output_pairs * 2, C, H, W]
@@ -103,6 +99,9 @@ class TransformerOriginalDataset(Dataset):
 
         X = torch.Tensor(X)  # noqa
         inp_test = torch.Tensor(_encode_colors(task[-1, 0, :, :]))
-        out_test = torch.Tensor(_encode_colors(task[-1, 1, :, :]))
+
+        # Output test, should not be encoded for later computing the
+        # cross entropy loss.
+        out_test = torch.LongTensor(task[-1, 1, :, :])
 
         return X, inp_test, out_test
