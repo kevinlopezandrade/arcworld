@@ -37,19 +37,24 @@ def hash_task(task: Task) -> str:
     return hash
 
 
-def normalize_task(task: Task) -> NDArray[np.uint8]:
+def normalize_task(task: Task, h: int = 30, w: int = 30) -> NDArray[np.uint8]:
     """
     Given a task normalize the task examples so that all of them are placed
-    at the top left corner of a 30x30 grid. We use 10 as value to flag a pixel
-    not being part of the task. Dimensions: [N_Example, 0 | 1, 30, 30], where
+    at the top left corner of a hxw grid. We use 10 as value to flag a pixel
+    not being part of the task. Dimensions: [N_Example, 0 | 1, h, w], where
     0 := input, 1 := output. e.g To get output of the example 2, X[1, 1, :, :]
+
+    Args:
+        task: Task to be normalized
+        h: Height of the normalized grid
+        w: Width of the normalized grid
     """
     N = len(task)  # noqa
 
     if N > MAX_PAIRS:
         raise ValueError(f"A task cannot have more than {MAX_PAIRS} examples")
 
-    res = np.empty(shape=(MAX_PAIRS, 2, 30, 30), dtype=np.uint8)
+    res = np.empty(shape=(MAX_PAIRS, 2, h, w), dtype=np.uint8)
 
     # TODO: We use the 10 value as a flag. Maybe I need
     # to test if the examples contain values that are not
@@ -57,8 +62,19 @@ def normalize_task(task: Task) -> NDArray[np.uint8]:
     res.fill(10)
 
     for i in range(N):
-        res[i, 0, : task[i].input.shape[0], : task[i].input.shape[1]] = task[i].input
-        res[i, 1, : task[i].output.shape[0], : task[i].output.shape[1]] = task[i].output
+        inp_shape = task[i].input.shape
+        out_shape = task[i].output.shape
+
+        if inp_shape[0] > h or inp_shape[1] > w:
+            raise ValueError(f"Input {i} exceeds the dimension of the normalized grid.")
+
+        if out_shape[0] > h or out_shape[1] > w:
+            raise ValueError(
+                f"Output {i} exceeds the dimension of the normalized grid."
+            )
+
+        res[i, 0, : inp_shape[0], : inp_shape[1]] = task[i].input
+        res[i, 1, : out_shape[0], : out_shape[1]] = task[i].output
 
     return res
 
@@ -84,6 +100,10 @@ def _find_bounds(array: NDArray[np.uint8]) -> Tuple[int, int]:
 
 
 def decode_normalized_grid(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    """
+    Given a normalized grid, returns the subgrid where it does not contain
+    padding pixels.
+    """
     h, w = _find_bounds(grid)
 
     return grid[:h, :w]

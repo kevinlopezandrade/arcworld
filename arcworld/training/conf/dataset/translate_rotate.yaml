@@ -1,2 +1,4 @@
 train_path: /home/kevin/datasets/raw/translate_rotate/training
 eval_path: /home/kevin/datasets/raw/translate_rotate/evaluation
+h_bound: 30
+w_bound: 30

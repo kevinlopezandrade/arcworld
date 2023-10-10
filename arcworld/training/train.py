@@ -18,6 +18,7 @@ from tqdm import tqdm
 
 from arcworld.internal.constants import Example, Task
 from arcworld.training.dataloader import TransformerOriginalDataset, decode_colors
+from arcworld.training.metrics import ArcPixelDifference
 from arcworld.training.pixeltransformer import PixelTransformer
 from arcworld.utils import plot_grids, plot_task
 
@@ -137,8 +138,12 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     device = torch.device(cfg.device)
-    train_dataset = TransformerOriginalDataset(cfg.dataset.train_path)
-    eval_dataset = TransformerOriginalDataset(cfg.dataset.eval_path)
+    train_dataset = TransformerOriginalDataset(
+        cfg.dataset.train_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+    )
+    eval_dataset = TransformerOriginalDataset(
+        cfg.dataset.eval_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+    )
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -153,7 +158,7 @@ def main(cfg: DictConfig):
         num_workers=0,
     )
 
-    model = PixelTransformer().to(device)
+    model = PixelTransformer(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
     model.train()
 
     params = [p for p in model.parameters() if p.requires_grad]
@@ -161,7 +166,10 @@ def main(cfg: DictConfig):
     loss_fn = nn.CrossEntropyLoss(
         weight=torch.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.1], device=device)
     )
-    metrics = [Accuracy(task="multiclass", num_classes=11).to(device)]
+    metrics = [
+        Accuracy(task="multiclass", num_classes=11).to(device),
+        ArcPixelDifference().to(device),
+    ]
     for epoch in tqdm(range(cfg.epochs), desc="Training"):
         train(model, optimizer, loss_fn, train_dataloader, device)
         evaluate(model, metrics, eval_dataloader, device)

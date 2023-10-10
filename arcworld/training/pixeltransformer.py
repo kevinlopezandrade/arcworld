@@ -48,9 +48,9 @@ class Output2d(nn.Module):
 
 
 class PositionalEncoding2d(nn.Module):
-    def __init__(self, d_model):
+    def __init__(self, d_model, h: int = 30, w: int = 30):
         super().__init__()
-        pe = positionalencoding2d(d_model, 30, 30)
+        pe = positionalencoding2d(d_model, h, w)
         self.register_buffer("pe", pe)
 
     def forward(self, seq):
@@ -92,7 +92,7 @@ def positionalencoding2d(d_model, height, width):
 
 
 class PixelTransformer(nn.Module):
-    def __init__(self):
+    def __init__(self, h: int = 30, w: int = 30):
         super().__init__()
         self.d_model = 80
         num_encoder_heads = 4
@@ -102,7 +102,7 @@ class PixelTransformer(nn.Module):
         dim_feedforward = 64
         self.embedding2d = Embedding2d()
         self.pos_encoding = PositionalEncoding2d(
-            self.d_model
+            self.d_model, h=h, w=w
         )  # add pixel pos + inp/outp
         encoder_layer = TransformerEncoderLayer(
             self.d_model, num_encoder_heads, dim_feedforward, norm_first=True
@@ -121,7 +121,11 @@ class PixelTransformer(nn.Module):
         self.register_buffer(
             "inp_out_channel",
             torch.concatenate(
-                (torch.zeros((1, 1, 1, 30, 30)), torch.ones((1, 1, 1, 30, 30))), dim=0
+                (
+                    torch.zeros((1, 1, 1, h, w)),
+                    torch.ones((1, 1, 1, h, w)),
+                ),
+                dim=0,
             ),
         )
 

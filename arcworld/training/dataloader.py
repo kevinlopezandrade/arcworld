@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from torch.utils.data import Dataset
 
 from arcworld.internal.constants import Task
-from arcworld.storage.fingerprint import decode_normalized_grid, normalize_task
+from arcworld.storage.fingerprint import normalize_task
 from arcworld.utils import decode_json_task
 
 
@@ -57,21 +57,32 @@ def _encode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
 
 
 def decode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    """
+    Given a grid with shape [C, H, W] where each channel
+    encodes binary a color, returns the grid with shape
+    [H, W] where colors are not binarized anymore.
+    """
     _, h, w = grid.shape
     decoded_grid = np.zeros(shape=(h, w), dtype=np.uint8)
 
     for color in range(0, 11):
         decoded_grid = decoded_grid + (color * grid[color, :, :])
 
-    decoded_grid = decode_normalized_grid(decoded_grid)
-
     return decoded_grid
 
 
 class TransformerOriginalDataset(Dataset):
-    def __init__(self, path: str):
+    def __init__(self, path: str, h_bound: int = 30, w_bound: int = 30):
+        """
+        Args:
+            path: Path of the directory containing the json files
+            h_bound: Height to which normalize the grids.
+            w_bound: Width to which normalize the grids.
+        """
         self.path = path
         self.data = _read_arc_json_files(path)
+        self.h_bound = h_bound
+        self.w_bound = w_bound
 
     def __len__(self):
         return len(self.data)
@@ -87,12 +98,12 @@ class TransformerOriginalDataset(Dataset):
             inp_test: Tensor with shape [C, H, W]
             out_test: Tensor with shape [C, H, W]
         """
-        task = normalize_task(self.data[idx])
+        task = normalize_task(self.data[idx], h=self.h_bound, w=self.w_bound)
 
         # In Stefan architecture the inputs are passed
         # as [6, C, H, W] where the input and output pairs
         # are arranged contiguously.
-        X = np.zeros((3 * 2, 11, 30, 30), dtype=np.uint8)  # noqa
+        X = np.zeros((3 * 2, 11, self.h_bound, self.w_bound), dtype=np.uint8)  # noqa
         for i, example in enumerate(task[:-1]):
             X[i * 2, :, :, :] = _encode_colors(example[0, :, :])
             X[i * 2 + 1, :, :, :] = _encode_colors(example[1, :, :])
