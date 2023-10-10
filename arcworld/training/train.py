@@ -2,17 +2,18 @@ import os
 from typing import List
 
 import hydra
+import numpy as np
 import torch
 import torch.nn.functional as F
 import wandb
+from numpy.typing import NDArray
 from omegaconf import DictConfig, OmegaConf
-from torch import nn
+from torch import FloatTensor, nn
 from torch.optim import Optimizer
 from torch.types import Device
 from torch.utils.data import DataLoader
 from torchmetrics import Metric
 from torchmetrics.classification import Accuracy
-from torchmetrics.text import EditDistance
 from tqdm import tqdm
 
 from arcworld.internal.constants import Example, Task
@@ -23,11 +24,32 @@ from arcworld.utils import plot_grids, plot_task
 wandb.login()
 
 
+def _task_from_sequence(seq: FloatTensor) -> Task:
+    """
+    Given a tensor with shape [6, C, H, W] where the input and output pairs
+    are arranged contiguously, decodes the colors and constructs a Task.
+    """
+    seq_np: NDArray[np.float32] = seq.cpu().numpy()
+    task: Task = []
+    for i in range(seq_np.shape[0] // 2):
+        inp = decode_colors(seq_np[2 * i])
+        out = decode_colors(seq_np[2 * i + 1])
+        task.append(Example(input=inp, output=out))
+
+    return task
+
+
 def evaluate(
     model: nn.Module, metrics: List[Metric], dataloader: DataLoader, device: Device
 ):
     """
-    Evalutes the model without computing gradients.
+    Evalutes the model over the passed metrics without computing gradients.
+
+    Args:
+        model: Pytorch module to evaluate.
+        metrics: List of metrics for which to evaluate the model.
+        dataloader: DataLoader from which to get the batches.
+        device: Device used to store the tensors.
     """
     model.eval()
     with torch.no_grad():
@@ -39,21 +61,7 @@ def evaluate(
             pred = model(seq, inp_test)
 
             for metric in metrics:
-                if isinstance(metric, EditDistance):
-                    pred = torch.argmax(F.softmax(pred, dim=1), dim=1)
-                    out_str: List[str] = []
-                    pred_str: List[str] = []
-
-                    for grid in out_test:
-                        out_str.append(str(grid.cpu().numpy().tolist()))
-
-                    for grid in pred:
-                        pred_str.append(str(grid.cpu().numpy().tolist()))
-
-                    metric(pred_str, out_str)
-
-                else:
-                    metric(pred, out_test)
+                metric(pred, out_test)
 
         for metric in metrics:
             wandb.log({metric.__class__.__name__: metric.compute()}, commit=False)
@@ -63,20 +71,17 @@ def evaluate(
         seq, inp_test, out_test = next(iter(dataloader))
         pred = model(seq.to(device), inp_test.to(device))[0]
         pred = torch.argmax(F.softmax(pred, dim=0), dim=0).cpu().numpy()
-        seq = seq.cpu().numpy()[0]
 
-        task: Task = []
-        for i in range(seq.shape[0] // 2):
-            inp = decode_colors(seq[2 * i])
-            out = decode_colors(seq[2 * i + 1])
-            task.append(Example(input=inp, output=out))
+        task = _task_from_sequence(seq[0])
 
         inp_test = decode_colors(inp_test[0].cpu().numpy())
         out_test = out_test[0].cpu().numpy()
         task.append(Example(input=inp_test, output=out_test))
 
-        wandb.log({"random_task": plot_task(task, return_fig=True)})
-        wandb.log({"prediction": plot_grids(out_test, pred, return_fig=True)})
+        wandb.log({"random_task": plot_task(task, return_fig=True)}, commit=False)
+        wandb.log(
+            {"prediction": plot_grids(out_test, pred, return_fig=True)}, commit=False
+        )
 
 
 def train(
@@ -88,6 +93,13 @@ def train(
 ):
     """
     Performs one epoch, and backpropagates at each processed batch.
+
+    Args:
+        model: Pytorch module to train.
+        optimizer: Optimizer used for updating the weights.
+        loss_fn: Loss function to minimize.
+        dataloader: DataLoader from which to get the batches.
+        device: Device used to store the tensors.
     """
     epoch_loss = 0.0
 
@@ -149,24 +161,26 @@ def main(cfg: DictConfig):
     loss_fn = nn.CrossEntropyLoss(
         weight=torch.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.1], device=device)
     )
-    metrics = [Accuracy(task="multiclass", num_classes=11).to(device), EditDistance()]
+    metrics = [Accuracy(task="multiclass", num_classes=11).to(device)]
     for epoch in tqdm(range(cfg.epochs), desc="Training"):
         train(model, optimizer, loss_fn, train_dataloader, device)
         evaluate(model, metrics, eval_dataloader, device)
 
         if epoch % 5 == 0:
+            hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
+            checkpoint_path = os.path.join(
+                hydra_cfg.runtime.output_dir, f"model_epoch_{epoch}.pt"
+            )
             torch.save(
                 {
                     "epoch": epoch,
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                 },
-                os.path.join(
-                    hydra.core.hydra_config.HydraConfig.get().runtime.output_dir,
-                    f"model_epoch_{epoch}.pt",
-                ),
+                checkpoint_path,
             )
 
+        # Commit all accumlated plots for this step.
         wandb.log({})
 
 

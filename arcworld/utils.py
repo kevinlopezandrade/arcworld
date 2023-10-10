@@ -86,6 +86,7 @@ def plot_grid(grid: NDArray[np.uint8], return_fig: bool = False):
     axe.set_xticklabels([])
 
     if return_fig:
+        plt.close(fig)
         return fig
     else:
         plt.show()
@@ -105,6 +106,7 @@ def plot_grids(*grids, return_fig: bool = False):
         axes[i].set_xticklabels([])
 
     if return_fig:
+        plt.close(fig)
         return fig
     else:
         plt.show()
@@ -193,6 +195,7 @@ def plot_task(task: Task, title: Optional[str] = None, return_fig: bool = False)
         fig.suptitle(title)
 
     if return_fig:
+        plt.close(fig)
         return fig
     else:
         plt.show()
