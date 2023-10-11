@@ -1,4 +1,5 @@
 import math
+import warnings
 
 import torch.nn
 from torch import nn
@@ -38,13 +39,23 @@ class Embedding2d(nn.Module):
 class Output2d(nn.Module):
     def __init__(self, d_model):
         super().__init__()
-
         self.conv = nn.Conv2d(
             d_model, 11, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
 
     def forward(self, x):
         return self.conv(x)
+
+
+class PositionalEncoding1d(nn.Module):
+    def __init__(self, d_model, h: int = 30, w: int = 30):
+        super().__init__()
+        sequence_length = int(h * w)
+        pe = positionalencoding1d(d_model, sequence_length)
+        self.register_buffer("pe", pe)
+
+    def forward(self, seq):
+        return seq + self.pe
 
 
 class PositionalEncoding2d(nn.Module):
@@ -55,6 +66,31 @@ class PositionalEncoding2d(nn.Module):
 
     def forward(self, seq):
         return seq + self.pe
+
+
+def positionalencoding1d(d_model, length):
+    """
+    :param d_model: dimension of the model
+    :param length: length of positions
+    :return: length*d_model position matrix
+    """
+    if d_model % 2 != 0:
+        raise ValueError(
+            "Cannot use sin/cos positional encoding with "
+            "odd dim (got dim={:d})".format(d_model)
+        )
+    pe = torch.zeros(length, d_model)
+    position = torch.arange(0, length).unsqueeze(1)
+    div_term = torch.exp(
+        (
+            torch.arange(0, d_model, 2, dtype=torch.float)
+            * -(math.log(10000.0) / d_model)
+        )
+    )
+    pe[:, 0::2] = torch.sin(position.float() * div_term)
+    pe[:, 1::2] = torch.cos(position.float() * div_term)
+
+    return pe
 
 
 def positionalencoding2d(d_model, height, width):
@@ -87,12 +123,11 @@ def positionalencoding2d(d_model, height, width):
     pe[d_model + 1 :: 2, :, :] = (
         torch.cos(pos_h * div_term).transpose(0, 1).unsqueeze(2).repeat(1, 1, width)
     )
-
     return pe
 
 
 class PixelTransformer(nn.Module):
-    def __init__(self, h: int = 30, w: int = 30):
+    def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D"):
         super().__init__()
         self.d_model = 80
         num_encoder_heads = 4
@@ -101,9 +136,20 @@ class PixelTransformer(nn.Module):
         num_decoder_layers = 8
         dim_feedforward = 64
         self.embedding2d = Embedding2d()
-        self.pos_encoding = PositionalEncoding2d(
-            self.d_model, h=h, w=w
-        )  # add pixel pos + inp/outp
+        if pos_encoding == "2D":
+            self.pos_encoding = PositionalEncoding2d(
+                self.d_model, h=h, w=w
+            )  # add pixel pos + inp/outp
+        elif pos_encoding == "1D":
+            self.pos_encoding = PositionalEncoding1d(
+                self.d_model, h=h, w=w
+            )  # add pixel pos + inp/outp
+        else:
+            warnings.warn(
+                "Wrong positional encoding type entered. Please use '1D' or '2D'. \
+                    Using default 2D pos encoding..."
+            )
+            self.pos_encoding = PositionalEncoding2d(self.d_model, h=h, w=w)
         encoder_layer = TransformerEncoderLayer(
             self.d_model, num_encoder_heads, dim_feedforward, norm_first=True
         )

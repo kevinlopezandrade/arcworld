@@ -133,6 +133,8 @@ def main(cfg: DictConfig):
         entity=cfg.user,
         project=cfg.project,
         config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+        notes=cfg.wandb_notes,
+        name=cfg.wand_name,
     )
 
     print(OmegaConf.to_yaml(cfg))
@@ -158,7 +160,9 @@ def main(cfg: DictConfig):
         num_workers=0,
     )
 
-    model = PixelTransformer(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
+    model = PixelTransformer(
+        h=cfg.dataset.h_bound, w=cfg.dataset.w_bound, pos_encoding=cfg.pos_encoding
+    ).to(device)
     model.train()
 
     params = [p for p in model.parameters() if p.requires_grad]
