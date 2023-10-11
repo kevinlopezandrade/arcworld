@@ -134,7 +134,7 @@ def main(cfg: DictConfig):
         project=cfg.project,
         config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
         notes=cfg.wandb_notes,
-        name=cfg.wand_name,
+        name=cfg.wandb_run_name,
     )
 
     print(OmegaConf.to_yaml(cfg))
@@ -161,7 +161,10 @@ def main(cfg: DictConfig):
     )
 
     model = PixelTransformer(
-        h=cfg.dataset.h_bound, w=cfg.dataset.w_bound, pos_encoding=cfg.pos_encoding
+        h=cfg.dataset.h_bound,
+        w=cfg.dataset.w_bound,
+        pos_encoding=cfg.pos_encoding,
+        embedding=cfg.embedding,
     ).to(device)
     model.train()
 

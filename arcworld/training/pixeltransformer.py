@@ -12,7 +12,7 @@ from torch.nn import (
 from torch.nn.init import xavier_uniform_
 
 
-class Embedding2d(nn.Module):
+class EmbeddingLinear(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(
@@ -26,6 +26,30 @@ class Embedding2d(nn.Module):
         )
         self.conv4 = nn.Conv2d(
             11, 33, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+        )
+
+    def forward(self, x):
+        x1 = self.conv1(x)
+        x2 = self.conv2(x)
+        x3 = self.conv3(x)
+        x4 = self.conv4(x)
+        return torch.concatenate((x4, x3, x2, x1), dim=1)
+
+
+class Embedding2d(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            11, 11, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+        )
+        self.conv2 = nn.Conv2d(
+            11, 15, kernel_size=3, stride=1, padding=1, padding_mode="zeros"
+        )
+        self.conv3 = nn.Conv2d(
+            11, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
+        )
+        self.conv4 = nn.Conv2d(
+            11, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -50,8 +74,7 @@ class Output2d(nn.Module):
 class PositionalEncoding1d(nn.Module):
     def __init__(self, d_model, h: int = 30, w: int = 30):
         super().__init__()
-        sequence_length = int(h * w)
-        pe = positionalencoding1d(d_model, sequence_length)
+        pe = positionalencoding1d(d_model, h, w)  # reshaping inside function.
         self.register_buffer("pe", pe)
 
     def forward(self, seq):
@@ -68,7 +91,7 @@ class PositionalEncoding2d(nn.Module):
         return seq + self.pe
 
 
-def positionalencoding1d(d_model, length):
+def positionalencoding1d(d_model, height, width):
     """
     :param d_model: dimension of the model
     :param length: length of positions
@@ -79,6 +102,7 @@ def positionalencoding1d(d_model, length):
             "Cannot use sin/cos positional encoding with "
             "odd dim (got dim={:d})".format(d_model)
         )
+    length = height * width
     pe = torch.zeros(length, d_model)
     position = torch.arange(0, length).unsqueeze(1)
     div_term = torch.exp(
@@ -90,6 +114,7 @@ def positionalencoding1d(d_model, length):
     pe[:, 0::2] = torch.sin(position.float() * div_term)
     pe[:, 1::2] = torch.cos(position.float() * div_term)
 
+    pe = pe.view(d_model, height, width)
     return pe
 
 
@@ -127,7 +152,7 @@ def positionalencoding2d(d_model, height, width):
 
 
 class PixelTransformer(nn.Module):
-    def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D"):
+    def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D", embedding="conv"):
         super().__init__()
         self.d_model = 80
         num_encoder_heads = 4
@@ -135,7 +160,16 @@ class PixelTransformer(nn.Module):
         num_encoder_layers = 8
         num_decoder_layers = 8
         dim_feedforward = 64
-        self.embedding2d = Embedding2d()
+
+        if embedding == "conv":
+            self.embedding = Embedding2d()
+        elif embedding == "linear":
+            self.embedding = EmbeddingLinear()
+        else:
+            warnings.warn(
+                "Wrong embedding type entered. Please use 'conv' or 'linear'. \
+                    Using default conv pos encoding..."
+            )
         if pos_encoding == "2D":
             self.pos_encoding = PositionalEncoding2d(
                 self.d_model, h=h, w=w
@@ -196,9 +230,9 @@ class PixelTransformer(nn.Module):
 
         n_train_examples = s // 2
 
-        src = self.embedding2d(src.reshape(s * b, c, h, w))
+        src = self.embedding(src.reshape(s * b, c, h, w))
 
-        tgt = self.embedding2d(tgt)
+        tgt = self.embedding(tgt)
         # Last channel otput will be all 0 denoting the input.
         tgt = torch.concatenate(
             (tgt, self.inp_out_channel[0].expand(b, -1, -1, -1)), dim=1
