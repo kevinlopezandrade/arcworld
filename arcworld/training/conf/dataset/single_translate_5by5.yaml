@@ -1,4 +1,4 @@
-train_path: home/yassine/dataset/single_translate_5by5/training
-eval_path: home/yassine/dataset/single_translate_5by5/evaluation
+train_path: /home/yassine/dataset/single_translate_5by5/training
+eval_path: /home/yassine/dataset/single_translate_5by5/evaluation
 h_bound: 6
 w_bound: 6
