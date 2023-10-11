@@ -39,7 +39,7 @@ $ pip install -e .
 We use [pre-commit](https://pre-commit.com/) in order to try to mantain a clean repo.
 Please install it using:
 ```shell
-$ pip instal pre-commit
+$ pip install pre-commit
 ```
 and install the hooks before attemping to push any commit:
 ```shell

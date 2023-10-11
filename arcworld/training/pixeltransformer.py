@@ -107,7 +107,9 @@ class PixelTransformer(nn.Module):
         encoder_layer = TransformerEncoderLayer(
             self.d_model, num_encoder_heads, dim_feedforward, norm_first=True
         )
-        self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers)
+        self.encoder = TransformerEncoder(
+            encoder_layer, num_encoder_layers, enable_nested_tensor=False
+        )
 
         self.linear = Linear(3 * self.d_model, self.d_model)
 

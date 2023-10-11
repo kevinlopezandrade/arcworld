@@ -3,8 +3,8 @@ defaults:
   - dataset: single_translate_5by5
   - optim: adamw
 
-user: ytbenchekroun
-project: ARC-solver
-epochs: 10
-bs: 64
+user: arcworld
+project: pixeltransformer
+epochs: 1
+bs: 4
 device: cuda
