@@ -3,7 +3,7 @@ defaults:
   - dataset: translate_rotate
   - optim: adamw
 
-user: kevinlo
+user: arcworld
 project: pixeltransformer
 epochs: 1
 bs: 4
