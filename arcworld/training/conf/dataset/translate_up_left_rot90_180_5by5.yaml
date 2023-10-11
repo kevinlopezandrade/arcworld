@@ -1,0 +1,4 @@
+train_path: ~/dataset/translate_up_left_rot90_180_5by5/training
+eval_path: ~/dataset/translate_up_left_rot90_180_5by5/evaluation
+h_bound: 6
+w_bound: 6
