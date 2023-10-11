@@ -18,13 +18,13 @@ class Embedding2d(nn.Module):
             11, 11, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
         self.conv2 = nn.Conv2d(
-            11, 15, kernel_size=3, stride=1, padding=1, padding_mode="zeros"
+            11, 15, kernel_size=1, stride=1, padding=1, padding_mode="zeros"
         )
         self.conv3 = nn.Conv2d(
-            11, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
+            11, 20, kernel_size=1, stride=1, padding=2, padding_mode="zeros"
         )
         self.conv4 = nn.Conv2d(
-            11, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
+            11, 33, kernel_size=1, stride=1, padding=5, padding_mode="zeros"
         )
 
     def forward(self, x):
