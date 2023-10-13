@@ -154,7 +154,7 @@ def positionalencoding2d(d_model, height, width):
 class PixelTransformerModified(nn.Module):
     def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D", embedding="conv"):
         super().__init__()
-        self.d_model = 81
+        self.d_model = 80
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
@@ -198,7 +198,9 @@ class PixelTransformerModified(nn.Module):
         )
 
         self.program_len = 50
-        self.program = torch.nn.parameter.Parameter(torch.empty((self.program_len, 1, self.d_model - 2)))
+        self.program = torch.nn.parameter.Parameter(
+            torch.empty((self.program_len, 1, self.d_model - 2))
+        )
 
         self.decoder = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers)
         self.final = Output2d(self.d_model)
@@ -215,16 +217,16 @@ class PixelTransformerModified(nn.Module):
         )
 
         self.register_buffer("not_program", torch.zeros((2, 1, 1, h, w)))
-        self.register_buffer("program_padding",
-                             torch.concatenate(
-                                 [
-                             torch.zeros((self.program_len, 1,1)),
-                            torch.ones(self.program_len,1,1)
-
-                                         ], dim = 2
-                             )
-                             )
-
+        self.register_buffer(
+            "program_padding",
+            torch.concatenate(
+                [
+                    torch.zeros((self.program_len, 1, 1)),
+                    torch.ones(self.program_len, 1, 1),
+                ],
+                dim=2,
+            ),
+        )
 
         self._reset_parameters()
 
@@ -275,10 +277,11 @@ class PixelTransformerModified(nn.Module):
 
         # second to last channel will be all zeroes because its not input
         # last channel all 1 because its program
-        program = self.program.expand(-1,b,-1)
-        program = torch.concatenate([program, self.program_padding.expand(-1,b,-1)], dim=2)
+        program = self.program.expand(-1, b, -1)
         program += positionalencoding1d(d_model=self.d_model, length=self.program_len)
-
+        program = torch.concatenate(
+            [program, self.program_padding.expand(-1, b, -1)], dim=2
+        )
 
         src = src.view(s, b, self.d_model - 1, h, w)
         total_memory = None
@@ -306,7 +309,7 @@ class PixelTransformerModified(nn.Module):
 
             # Encoders in Pytorch expect by default the batch at the second dimension.
             memory = self.encoder(src_subset)  # 1800 len seq, 2 batch size, 80 d model
-            memory = memory[:self.program_len]
+            memory = memory[: self.program_len]
 
             if total_memory is None:
                 total_memory = memory
