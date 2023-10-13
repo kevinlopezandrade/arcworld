@@ -49,7 +49,7 @@ class Embedding2d(nn.Module):
             11, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
         )
         self.conv4 = nn.Conv2d(
-            11, 32, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
+            11, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -72,24 +72,12 @@ class Output2d(nn.Module):
 
 
 class PositionalEncoding1d(nn.Module):
-    def __init__(self, d_model, h, w):
+    def __init__(self, d_model, h: int = 30, w: int = 30):
         super().__init__()
         pe = positionalencoding1d(
             d_model=d_model, length=h * w
         )  # reshaping inside function.
         pe = pe.view(d_model, h, w)
-        self.register_buffer("pe", pe)
-
-    def forward(self, seq):
-        return seq + self.pe
-
-
-class PositionalEncoding1dSequences(nn.Module):
-    def __init__(self, d_model, length):
-        super().__init__()
-        pe = positionalencoding1d(
-            d_model=d_model, length=length
-        )  # reshaping inside function.
         self.register_buffer("pe", pe)
 
     def forward(self, seq):
@@ -166,7 +154,7 @@ def positionalencoding2d(d_model, height, width):
 class PixelTransformerModified(nn.Module):
     def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D", embedding="conv"):
         super().__init__()
-        self.d_model = 80
+        self.d_model = 81
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
@@ -212,9 +200,6 @@ class PixelTransformerModified(nn.Module):
         self.program_len = 50
         self.program = torch.nn.parameter.Parameter(
             torch.empty((self.program_len, 1, self.d_model - 2))
-        )
-        self.pos_encodingprogram = PositionalEncoding1dSequences(
-            self.d_model, self.program_len
         )
 
         self.decoder = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers)
@@ -296,8 +281,7 @@ class PixelTransformerModified(nn.Module):
         program = torch.concatenate(
             [program, self.program_padding.expand(-1, b, -1)], dim=2
         )
-        program = torch.permute(1, 0, 2)
-        program = self.pos_encodingprogram(program)
+        program += positionalencoding1d(d_model=self.d_model, length=self.program_len)
 
         src = src.view(s, b, self.d_model - 1, h, w)
         total_memory = None

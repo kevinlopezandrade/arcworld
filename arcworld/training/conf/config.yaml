@@ -5,10 +5,10 @@ defaults:
 
 user: arcworld
 project: stormer
-model: modified
-wandb_run_name: single_translate_modified_model
-wandb_notes: ""
-pos_encoding: 2D
+pixeltransformer: beta
+wandb_run_name: single_translate_5by5
+wandb_notes: "trying 1d pos encoding"
+pos_encoding: 1D
 embedding: conv
 epochs: 15
 bs: 64
