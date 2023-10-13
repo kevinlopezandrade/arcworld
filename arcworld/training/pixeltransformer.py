@@ -197,6 +197,9 @@ class PixelTransformerModified(nn.Module):
             self.d_model, num_decoder_heads, dim_feedforward, norm_first=True
         )
 
+        self.program_len = 50
+        self.program = torch.nn.parameter.Parameter(torch.empty((self.program_len, 1, self.d_model - 2)))
+
         self.decoder = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers)
         self.final = Output2d(self.d_model)
 
@@ -212,6 +215,16 @@ class PixelTransformerModified(nn.Module):
         )
 
         self.register_buffer("not_program", torch.zeros((2, 1, 1, h, w)))
+        self.register_buffer("program_padding",
+                             torch.concatenate(
+                                 [
+                             torch.zeros((self.program_len, 1,1)),
+                            torch.ones(self.program_len,1,1)
+
+                                         ], dim = 2
+                             )
+                             )
+
 
         self._reset_parameters()
 
@@ -260,13 +273,12 @@ class PixelTransformerModified(nn.Module):
         tgt = self.pos_encoding(tgt)
         empty_canvas = self.pos_encoding(empty_canvas)
 
-        program_len = 50
-        program = torch.zeros((program_len, b, self.d_model - 1))
-        # last channel will be all ones because its a program
-        program = self.concat_ones(program, b)
+        # second to last channel will be all zeroes because its not input
+        # last channel all 1 because its program
+        program = self.program.expand(-1,b,-1)
+        program = torch.concatenate([program, self.program_padding.expand(-1,b,-1)], dim=2)
+        program += positionalencoding1d(d_model=self.d_model, length=self.program_len)
 
-        program = Linear(program_len, program_len)
-        program += positionalencoding1d(d_model=self.d_model - 1, length=program_len)
 
         src = src.view(s, b, self.d_model - 1, h, w)
         total_memory = None
@@ -294,7 +306,7 @@ class PixelTransformerModified(nn.Module):
 
             # Encoders in Pytorch expect by default the batch at the second dimension.
             memory = self.encoder(src_subset)  # 1800 len seq, 2 batch size, 80 d model
-            memory = memory[:program_len]
+            memory = memory[:self.program_len]
 
             if total_memory is None:
                 total_memory = memory
