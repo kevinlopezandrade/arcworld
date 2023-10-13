@@ -49,7 +49,7 @@ class Embedding2d(nn.Module):
             11, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
         )
         self.conv4 = nn.Conv2d(
-            11, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
+            11, 32, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -72,12 +72,24 @@ class Output2d(nn.Module):
 
 
 class PositionalEncoding1d(nn.Module):
-    def __init__(self, d_model, h: int = 30, w: int = 30):
+    def __init__(self, d_model, h, w):
         super().__init__()
         pe = positionalencoding1d(
             d_model=d_model, length=h * w
         )  # reshaping inside function.
         pe = pe.view(d_model, h, w)
+        self.register_buffer("pe", pe)
+
+    def forward(self, seq):
+        return seq + self.pe
+
+
+class PositionalEncoding1dSequences(nn.Module):
+    def __init__(self, d_model, length):
+        super().__init__()
+        pe = positionalencoding1d(
+            d_model=d_model, length=length
+        )  # reshaping inside function.
         self.register_buffer("pe", pe)
 
     def forward(self, seq):
@@ -201,6 +213,9 @@ class PixelTransformerModified(nn.Module):
         self.program = torch.nn.parameter.Parameter(
             torch.empty((self.program_len, 1, self.d_model - 2))
         )
+        self.pos_encodingprogram = PositionalEncoding1dSequences(
+            self.d_model, self.program_len
+        )
 
         self.decoder = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers)
         self.final = Output2d(self.d_model)
@@ -278,10 +293,11 @@ class PixelTransformerModified(nn.Module):
         # second to last channel will be all zeroes because its not input
         # last channel all 1 because its program
         program = self.program.expand(-1, b, -1)
-        program += positionalencoding1d(d_model=self.d_model, length=self.program_len)
         program = torch.concatenate(
             [program, self.program_padding.expand(-1, b, -1)], dim=2
         )
+        program = torch.permute(1, 0, 2)
+        program = self.pos_encodingprogram(program)
 
         src = src.view(s, b, self.d_model - 1, h, w)
         total_memory = None
