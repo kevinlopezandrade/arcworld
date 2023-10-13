@@ -94,7 +94,7 @@ def positionalencoding2d(d_model, height, width):
 class PixelTransformer(nn.Module):
     def __init__(self, h: int = 30, w: int = 30):
         super().__init__()
-        self.d_model = 80
+        self.d_model = 81
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
@@ -130,6 +130,9 @@ class PixelTransformer(nn.Module):
                 dim=0,
             ),
         )
+
+        self.register_buffer(
+            "not_program",torch.zeros((2, 1, 1, h, w)))
 
         self._reset_parameters()
 
@@ -195,6 +198,11 @@ class PixelTransformer(nn.Module):
             ]  # 2 (input output pairs) x batch_size x embedding size x height x width
             src_subset = torch.concatenate(
                 (src_subset, self.inp_out_channel.expand(-1, b, -1, -1, -1)), dim=2
+            )
+
+            # add zeroes to indicate its not a program
+            src_subset = torch.concatenate(
+                (src_subset, self.not_program.expand(-1, b, -1, -1, -1)), dim=2
             )
             src_subset = self.pos_encoding(src_subset)
             src_subset = (
