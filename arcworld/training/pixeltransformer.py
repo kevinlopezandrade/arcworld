@@ -25,7 +25,7 @@ class EmbeddingLinear(nn.Module):
             11, 20, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
         self.conv4 = nn.Conv2d(
-            11, 33, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+            11, 32, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -49,7 +49,7 @@ class Embedding2d(nn.Module):
             11, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
         )
         self.conv4 = nn.Conv2d(
-            11, 33, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
+            11, 32, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
         )
 
     def forward(self, x):
@@ -72,15 +72,27 @@ class Output2d(nn.Module):
 
 
 class PositionalEncoding1d(nn.Module):
-    def __init__(self, d_model, h: int = 30, w: int = 30):
+    def __init__(self, d_model, image_size =None, seq_len=None):
         super().__init__()
-        pe = positionalencoding1d(
-            d_model=d_model, length=h * w
-        )  # reshaping inside function.
-        pe = pe.view(d_model, h, w)
+        if image_size:
+            pe = positionalencoding1d(
+                d_model=d_model, length=image_size * image_size
+            )  # reshaping inside function.
+            pe = pe.view(image_size,image_size, d_model)
+            pe = pe.permute(2,0,1)
+        if seq_len:
+            self.is_seq = True
+            pe = positionalencoding1d(
+                d_model=d_model, length=seq_len
+            )  # reshaping inside function.
+            pe = pe.unsqueeze(1)
+        else:
+            raise ValueError
         self.register_buffer("pe", pe)
 
     def forward(self, seq):
+        if self.is_seq:
+            return seq + self.pe.expand(-1, seq.shape[1], -1)
         return seq + self.pe
 
 
@@ -154,7 +166,7 @@ def positionalencoding2d(d_model, height, width):
 class PixelTransformerModified(nn.Module):
     def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D", embedding="conv"):
         super().__init__()
-        self.d_model = 81
+        self.d_model = 80
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
@@ -175,7 +187,7 @@ class PixelTransformerModified(nn.Module):
             )  # add pixel pos + inp/outp
         elif pos_encoding == "1D":
             self.pos_encoding = PositionalEncoding1d(
-                self.d_model, h=h, w=w
+                self.d_model, image_size=h
             )  # add pixel pos + inp/outp
         else:
             warnings.warn(
@@ -198,6 +210,10 @@ class PixelTransformerModified(nn.Module):
         )
 
         self.program_len = 50
+
+        self.pos_encoding_program = PositionalEncoding1d(
+            self.d_model, seq_len=self.program_len
+        )
         self.program = torch.nn.parameter.Parameter(torch.empty((self.program_len, 1, self.d_model - 2)))
 
         self.decoder = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers)
@@ -277,7 +293,7 @@ class PixelTransformerModified(nn.Module):
         # last channel all 1 because its program
         program = self.program.expand(-1,b,-1)
         program = torch.concatenate([program, self.program_padding.expand(-1,b,-1)], dim=2)
-        program += positionalencoding1d(d_model=self.d_model, length=self.program_len)
+        program = self.pos_encoding_program(program)
 
 
         src = src.view(s, b, self.d_model - 1, h, w)
