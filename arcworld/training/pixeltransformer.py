@@ -139,6 +139,17 @@ class PixelTransformer(nn.Module):
             if p.dim() > 1:
                 xavier_uniform_(p)
 
+    def concat_zeros(self, x):
+        return torch.concatenate(
+            (x, self.inp_out_channel[0].expand(b, -1, -1, -1)), dim=1
+        )
+
+    def concat_ones(self, x):
+        return torch.concatenate(
+            (x, self.inp_out_channel[1].expand(b, -1, -1, -1)), dim=1
+        )
+
+
     def forward(self, src, tgt):
         """
         Args:
@@ -152,12 +163,28 @@ class PixelTransformer(nn.Module):
 
         src = self.embedding2d(src.reshape(s * b, c, h, w))
 
+        empty_canvas = torch.zeros_like(tgt)
+        empty_canvas = self.embedding2d(empty_canvas)
+
         tgt = self.embedding2d(tgt)
-        # Last channel otput will be all 0 denoting the input.
-        tgt = torch.concatenate(
-            (tgt, self.inp_out_channel[0].expand(b, -1, -1, -1)), dim=1
-        )
+        # second to last channel otput will be all 0 denoting the input.
+        tgt = self.concat_zeros(tgt)
+        # second to last channel will all be 1 denoting output
+        empty_canvas = self.concat_ones(empty_canvas)
+
+        # last channel will all be 0 denoting its not a programm
+        tgt = self.concat_zeros(tgt)
+        empty_canvas = self.concat_zeros(empty_canvas)
+
         tgt = self.pos_encoding(tgt)
+        empty_canvas = self.pos_encoding(empty_canvas)
+
+        program_len = 50
+        program = torch.zeros((program_len,b,self.d_model-1))
+        # last channel will be all ones because its a program
+        program = program.concat_ones(program)
+        program = self.pos_encoding1d(program)
+
 
         src = src.view(s, b, self.d_model - 1, h, w)
         total_memory = None
@@ -176,8 +203,12 @@ class PixelTransformer(nn.Module):
                 .view(h * w * 2, b, self.d_model)
             )
 
+            src_subset = torch.concatenate([program.clone(),src_subset])
+
             # Encoders in Pytorch expect by default the batch at the second dimension.
             memory = self.encoder(src_subset)  # 1800 len seq, 2 batch size, 80 d model
+            memory = memory[:program_len]
+
 
             if total_memory is None:
                 total_memory = memory
@@ -187,8 +218,13 @@ class PixelTransformer(nn.Module):
                 )  # dim 2 is the embedding dimension
 
         tgt = tgt.permute(3, 2, 0, 1).contiguous().view(h * w, b, self.d_model)
+        empty_canvas = empty_canvas.permute(3, 2, 0, 1).contiguous().view(h * w, b, self.d_model)
+
+        len_output = empty_canvas.shape[0]
+
+        tgt = torch.concatenate([empty_canvas, tgt])
 
         output = self.decoder(tgt, self.linear(total_memory))
         output = output.view(h, w, b, self.d_model).permute(2, 3, 0, 1)
-
+        output = output[:len_output]
         return self.final(output)
