@@ -16,7 +16,7 @@ class EmbeddingLinear(nn.Module):
     def __init__(self, embedding_scaling=1, new_architecture=False):
         super().__init__()
         self.embedding_scaling = embedding_scaling
-        self.using_new_architectur = new_architecture
+        self.new_architecture = new_architecture
         self.conv1 = nn.Conv2d(
             11,
             11 * self.embedding_scaling,
@@ -72,7 +72,7 @@ class Embedding2d(nn.Module):
     def __init__(self, embedding_scaling=1, new_architecture=False):
         super().__init__()
         self.embedding_scaling = embedding_scaling
-        self.using_new_architectur = new_architecture
+        self.new_architecture = new_architecture
         self.conv1 = nn.Conv2d(
             11,
             11 * self.embedding_scaling,
@@ -139,12 +139,13 @@ class PositionalEncoding1d(nn.Module):
     def __init__(self, d_model, image_size=None, seq_len=None):
         super().__init__()
         if image_size:
+            self.is_seq = False
             pe = positionalencoding1d(
                 d_model=d_model, length=image_size * image_size
             )  # reshaping inside function.
             pe = pe.view(image_size, image_size, d_model)
             pe = pe.permute(2, 0, 1)
-        if seq_len:
+        elif seq_len:
             self.is_seq = True
             pe = positionalencoding1d(
                 d_model=d_model, length=seq_len
