@@ -170,6 +170,7 @@ def main(cfg: DictConfig):
             w=cfg.dataset.w_bound,
             pos_encoding=cfg.pos_encoding,
             embedding=cfg.embedding,
+            embedding_scaling=cfg.embedding_scaling,
         ).to(device)
         model.train()
     elif cfg.model == "original":
@@ -178,6 +179,7 @@ def main(cfg: DictConfig):
             w=cfg.dataset.w_bound,
             pos_encoding=cfg.pos_encoding,
             embedding=cfg.embedding,
+            embedding_scaling=cfg.embedding_scaling,
         ).to(device)
         model.train()
     else:

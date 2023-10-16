@@ -13,20 +13,52 @@ from torch.nn.init import xavier_uniform_
 
 
 class EmbeddingLinear(nn.Module):
-    def __init__(self):
+    def __init__(self, embedding_scaling=1, new_architecture=False):
         super().__init__()
+        self.embedding_scaling = embedding_scaling
+        self.using_new_architectur = new_architecture
         self.conv1 = nn.Conv2d(
-            11, 11, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+            11,
+            11 * self.embedding_scaling,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            padding_mode="zeros",
         )
         self.conv2 = nn.Conv2d(
-            11, 15, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+            11,
+            15 * self.embedding_scaling,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            padding_mode="zeros",
         )
         self.conv3 = nn.Conv2d(
-            11, 20, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+            11,
+            20 * self.embedding_scaling,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            padding_mode="zeros",
         )
-        self.conv4 = nn.Conv2d(
-            11, 32, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
-        )
+        if not self.new_architecture:
+            self.conv4 = nn.Conv2d(
+                11,
+                33 * self.embedding_scaling + self.embedding_scaling - 1,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                padding_mode="zeros",
+            )
+        else:
+            self.conv4 = nn.Conv2d(
+                11,
+                33 * self.embedding_scaling + self.embedding_scaling - 2,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                padding_mode="zeros",
+            )
 
     def forward(self, x):
         x1 = self.conv1(x)
@@ -37,20 +69,52 @@ class EmbeddingLinear(nn.Module):
 
 
 class Embedding2d(nn.Module):
-    def __init__(self):
+    def __init__(self, embedding_scaling=1, new_architecture=False):
         super().__init__()
+        self.embedding_scaling = embedding_scaling
+        self.using_new_architectur = new_architecture
         self.conv1 = nn.Conv2d(
-            11, 11, kernel_size=1, stride=1, padding=0, padding_mode="zeros"
+            11,
+            11 * self.embedding_scaling,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            padding_mode="zeros",
         )
         self.conv2 = nn.Conv2d(
-            11, 15, kernel_size=3, stride=1, padding=1, padding_mode="zeros"
+            11,
+            15 * self.embedding_scaling,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            padding_mode="zeros",
         )
         self.conv3 = nn.Conv2d(
-            11, 20, kernel_size=5, stride=1, padding=2, padding_mode="zeros"
+            11,
+            20 * self.embedding_scaling,
+            kernel_size=5,
+            stride=1,
+            padding=2,
+            padding_mode="zeros",
         )
-        self.conv4 = nn.Conv2d(
-            11, 32, kernel_size=11, stride=1, padding=5, padding_mode="zeros"
-        )
+        if not self.new_architecture:
+            self.conv4 = nn.Conv2d(
+                11,
+                33 * self.embedding_scaling + self.embedding_scaling - 1,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                padding_mode="zeros",
+            )
+        else:
+            self.conv4 = nn.Conv2d(
+                11,
+                33 * self.embedding_scaling + self.embedding_scaling - 2,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                padding_mode="zeros",
+            )
 
     def forward(self, x):
         x1 = self.conv1(x)
@@ -72,14 +136,14 @@ class Output2d(nn.Module):
 
 
 class PositionalEncoding1d(nn.Module):
-    def __init__(self, d_model, image_size =None, seq_len=None):
+    def __init__(self, d_model, image_size=None, seq_len=None):
         super().__init__()
         if image_size:
             pe = positionalencoding1d(
                 d_model=d_model, length=image_size * image_size
             )  # reshaping inside function.
-            pe = pe.view(image_size,image_size, d_model)
-            pe = pe.permute(2,0,1)
+            pe = pe.view(image_size, image_size, d_model)
+            pe = pe.permute(2, 0, 1)
         if seq_len:
             self.is_seq = True
             pe = positionalencoding1d(
@@ -164,18 +228,30 @@ def positionalencoding2d(d_model, height, width):
 
 
 class PixelTransformerModified(nn.Module):
-    def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D", embedding="conv"):
+    def __init__(
+        self,
+        h: int = 30,
+        w: int = 30,
+        pos_encoding="2D",
+        embedding="conv",
+        embedding_scaling=1,
+    ):
         super().__init__()
-        self.d_model = 80
+        self.embedding_scaling = int(embedding_scaling)
+        self.d_model = 80 * self.embedding_scaling
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
         num_decoder_layers = 8
         dim_feedforward = 64
         if embedding == "conv":
-            self.embedding = Embedding2d()
+            self.embedding = Embedding2d(
+                embedding_scaling=self.embedding_scaling, new_architecture=True
+            )
         elif embedding == "linear":
-            self.embedding = EmbeddingLinear()
+            self.embedding = EmbeddingLinear(
+                embedding_scaling=self.embedding_scaling, new_architecture=True
+            )
         else:
             warnings.warn(
                 "Wrong embedding type entered. Please use 'conv' or 'linear'. \
@@ -214,7 +290,9 @@ class PixelTransformerModified(nn.Module):
         self.pos_encoding_program = PositionalEncoding1d(
             self.d_model, seq_len=self.program_len
         )
-        self.program = torch.nn.parameter.Parameter(torch.empty((self.program_len, 1, self.d_model - 2)))
+        self.program = torch.nn.parameter.Parameter(
+            torch.empty((self.program_len, 1, self.d_model - 2))
+        )
 
         self.decoder = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers)
         self.final = Output2d(self.d_model)
@@ -231,16 +309,16 @@ class PixelTransformerModified(nn.Module):
         )
 
         self.register_buffer("not_program", torch.zeros((2, 1, 1, h, w)))
-        self.register_buffer("program_padding",
-                             torch.concatenate(
-                                 [
-                             torch.zeros((self.program_len, 1,1)),
-                            torch.ones(self.program_len,1,1)
-
-                                         ], dim = 2
-                             )
-                             )
-
+        self.register_buffer(
+            "program_padding",
+            torch.concatenate(
+                [
+                    torch.zeros((self.program_len, 1, 1)),
+                    torch.ones(self.program_len, 1, 1),
+                ],
+                dim=2,
+            ),
+        )
 
         self._reset_parameters()
 
@@ -291,12 +369,13 @@ class PixelTransformerModified(nn.Module):
 
         # second to last channel will be all zeroes because its not input
         # last channel all 1 because its program
-        program = self.program.expand(-1,b,-1)
-        program = torch.concatenate([program, self.program_padding.expand(-1,b,-1)], dim=2)
+        program = self.program.expand(-1, b, -1)
+        program = torch.concatenate(
+            [program, self.program_padding.expand(-1, b, -1)], dim=2
+        )
         program = self.pos_encoding_program(program)
 
-
-        src = src.view(s, b, self.d_model - 1, h, w)
+        src = src.view(s, b, self.d_model - 2, h, w)
         total_memory = None
         for i in range(n_train_examples):
             inp = i * 2
@@ -322,7 +401,7 @@ class PixelTransformerModified(nn.Module):
 
             # Encoders in Pytorch expect by default the batch at the second dimension.
             memory = self.encoder(src_subset)  # 1800 len seq, 2 batch size, 80 d model
-            memory = memory[:self.program_len]
+            memory = memory[: self.program_len]
 
             if total_memory is None:
                 total_memory = memory
@@ -341,15 +420,23 @@ class PixelTransformerModified(nn.Module):
         tgt = torch.concatenate([empty_canvas, tgt])
 
         output = self.decoder(tgt, self.linear(total_memory))
-        output = output.view(h, w, b, self.d_model).permute(2, 3, 0, 1)
         output = output[:len_output]
+        output = output.view(h, w, b, self.d_model).permute(2, 3, 0, 1)
         return self.final(output)
 
 
 class PixelTransformer(nn.Module):
-    def __init__(self, h: int = 30, w: int = 30, pos_encoding="2D", embedding="conv"):
+    def __init__(
+        self,
+        h: int = 30,
+        w: int = 30,
+        pos_encoding="2D",
+        embedding="conv",
+        embedding_scaling=1,
+    ):
         super().__init__()
-        self.d_model = 80
+        self.embedding_scaling = int(embedding_scaling)
+        self.d_model = 80 * self.embedding_scaling
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
@@ -357,9 +444,13 @@ class PixelTransformer(nn.Module):
         dim_feedforward = 64
 
         if embedding == "conv":
-            self.embedding = Embedding2d()
+            self.embedding = Embedding2d(
+                embedding_scaling=self.embedding_scaling, new_architecture=False
+            )
         elif embedding == "linear":
-            self.embedding = EmbeddingLinear()
+            self.embedding = EmbeddingLinear(
+                embedding_scaling=self.embedding_scaling, new_architecture=False
+            )
         else:
             warnings.warn(
                 "Wrong embedding type entered. Please use 'conv' or 'linear'. \
@@ -371,7 +462,7 @@ class PixelTransformer(nn.Module):
             )  # add pixel pos + inp/outp
         elif pos_encoding == "1D":
             self.pos_encoding = PositionalEncoding1d(
-                self.d_model, h=h, w=w
+                self.d_model, image_size=h
             )  # add pixel pos + inp/outp
         else:
             warnings.warn(
