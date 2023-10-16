@@ -21,9 +21,10 @@ COLORMAP = colors.ListedColormap(
         "#FF851B",
         "#7FDBFF",
         "#870C25",
+        "#FFFFFF",
     ]
 )
-NORM = colors.Normalize(vmin=0, vmax=9)
+NORM = colors.Normalize(vmin=0, vmax=10)
 
 
 class DoesNotFitError(Exception):
