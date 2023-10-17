@@ -1,0 +1,4 @@
+train_path: /home/yassine/dataset/translate_up_if_symmetric_8b8/training
+eval_path: /home/yassine/dataset/translate_up_if_symmetric_8b8/evaluation
+h_bound: 8
+w_bound: 8

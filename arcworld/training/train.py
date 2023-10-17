@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import List
 
 import hydra
@@ -19,7 +20,10 @@ from tqdm import tqdm
 from arcworld.internal.constants import Example, Task
 from arcworld.training.dataloader import TransformerOriginalDataset, decode_colors
 from arcworld.training.metrics import ArcPixelDifference
-from arcworld.training.pixeltransformer import PixelTransformer
+from arcworld.training.pixeltransformer import (
+    PixelTransformer,
+    PixelTransformerModified,
+)
 from arcworld.utils import plot_grids, plot_task
 
 wandb.login()
@@ -133,6 +137,8 @@ def main(cfg: DictConfig):
         entity=cfg.user,
         project=cfg.project,
         config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+        notes=cfg.wandb_notes,
+        name=cfg.wandb_run_name,
     )
 
     print(OmegaConf.to_yaml(cfg))
@@ -158,8 +164,29 @@ def main(cfg: DictConfig):
         num_workers=0,
     )
 
-    model = PixelTransformer(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
-    model.train()
+    if cfg.model == "modified":
+        model = PixelTransformerModified(
+            h=cfg.dataset.h_bound,
+            w=cfg.dataset.w_bound,
+            pos_encoding=cfg.pos_encoding,
+            embedding=cfg.embedding,
+            embedding_scaling=cfg.embedding_scaling,
+        ).to(device)
+        model.train()
+    elif cfg.model == "original":
+        model = PixelTransformer(
+            h=cfg.dataset.h_bound,
+            w=cfg.dataset.w_bound,
+            pos_encoding=cfg.pos_encoding,
+            embedding=cfg.embedding,
+            embedding_scaling=cfg.embedding_scaling,
+        ).to(device)
+        model.train()
+    else:
+        warnings.warn(
+            "Wrong model type entered. Please use 'original' or 'modified'. \
+                    Using default original pos encoding..."
+        )
 
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(params, lr=cfg.optim.lr)

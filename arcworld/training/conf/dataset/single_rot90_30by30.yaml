@@ -1,0 +1,4 @@
+train_path: /home/yassine/dataset/single_rot90_30by30/training
+eval_path: /home/yassine/dataset/single_rot90_30by30/evaluation
+h_bound: 30
+w_bound: 30
