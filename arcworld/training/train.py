@@ -1,138 +1,31 @@
 import os
-from typing import List
 
 import hydra
-import numpy as np
 import torch
-import torch.nn.functional as F
 import wandb
-from numpy.typing import NDArray
-from omegaconf import DictConfig, OmegaConf
-from torch import FloatTensor, nn
-from torch.optim import Optimizer
-from torch.types import Device
+from omegaconf import DictConfig, OmegaConf, open_dict
+from torch import nn
 from torch.utils.data import DataLoader
-from torchmetrics import Metric
 from torchmetrics.classification import Accuracy
 from tqdm import tqdm
 
-from arcworld.internal.constants import Example, Task
-from arcworld.training.dataloader import TransformerOriginalDataset, decode_colors
+from arcworld.training.dataloader import TransformerOriginalDataset
 from arcworld.training.metrics import ArcPixelDifference
 from arcworld.training.pixeltransformer import PixelTransformer
-from arcworld.utils import plot_grids, plot_task
-
-wandb.login()
-
-
-def _task_from_sequence(seq: FloatTensor) -> Task:
-    """
-    Given a tensor with shape [6, C, H, W] where the input and output pairs
-    are arranged contiguously, decodes the colors and constructs a Task.
-    """
-    seq_np: NDArray[np.float32] = seq.cpu().numpy()
-    task: Task = []
-    for i in range(seq_np.shape[0] // 2):
-        inp = decode_colors(seq_np[2 * i])
-        out = decode_colors(seq_np[2 * i + 1])
-        task.append(Example(input=inp, output=out))
-
-    return task
-
-
-def evaluate(
-    model: nn.Module, metrics: List[Metric], dataloader: DataLoader, device: Device
-):
-    """
-    Evalutes the model over the passed metrics without computing gradients.
-
-    Args:
-        model: Pytorch module to evaluate.
-        metrics: List of metrics for which to evaluate the model.
-        dataloader: DataLoader from which to get the batches.
-        device: Device used to store the tensors.
-    """
-    model.eval()
-    with torch.no_grad():
-        for seq, inp_test, out_test in dataloader:
-            seq = seq.to(device)
-            inp_test = inp_test.to(device)
-            out_test = out_test.to(device)
-
-            pred = model(seq, inp_test)
-
-            for metric in metrics:
-                metric(pred, out_test)
-
-        for metric in metrics:
-            wandb.log({metric.__class__.__name__: metric.compute()}, commit=False)
-            metric.reset()
-
-        # Randomly plot an input, output pair.
-        seq, inp_test, out_test = next(iter(dataloader))
-        pred = model(seq.to(device), inp_test.to(device))[0]
-        pred = torch.argmax(F.softmax(pred, dim=0), dim=0).cpu().numpy()
-
-        task = _task_from_sequence(seq[0])
-
-        inp_test = decode_colors(inp_test[0].cpu().numpy())
-        out_test = out_test[0].cpu().numpy()
-        task.append(Example(input=inp_test, output=out_test))
-
-        wandb.log({"random_task": plot_task(task, return_fig=True)}, commit=False)
-        wandb.log(
-            {"prediction": plot_grids(out_test, pred, return_fig=True)}, commit=False
-        )
-
-
-def train(
-    model: nn.Module,
-    optimizer: Optimizer,
-    loss_fn: nn.Module,
-    dataloader: DataLoader,
-    device: Device,
-):
-    """
-    Performs one epoch, and backpropagates at each processed batch.
-
-    Args:
-        model: Pytorch module to train.
-        optimizer: Optimizer used for updating the weights.
-        loss_fn: Loss function to minimize.
-        dataloader: DataLoader from which to get the batches.
-        device: Device used to store the tensors.
-    """
-    epoch_loss = 0.0
-
-    for (
-        seq,
-        inp_test,
-        out_test,
-    ) in dataloader:
-        optimizer.zero_grad()
-
-        seq = seq.to(device)
-        inp_test = inp_test.to(device)
-        out_test = out_test.to(device)
-
-        output = model(seq, inp_test)
-        loss = loss_fn(output, out_test)
-        loss.backward()
-        optimizer.step()
-
-        epoch_loss += loss
-
-    with torch.no_grad():
-        epoch_loss = epoch_loss * (1 / len(dataloader))
-        wandb.log({loss_fn.__class__.__name__: epoch_loss}, commit=False)
+from arcworld.training.trainer import evaluate, train
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
+    # Save output dir in wandb.
+    OmegaConf.set_struct(cfg, True)
+    with open_dict(cfg):
+        cfg.output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+
     wandb.init(
         entity=cfg.user,
         project=cfg.project,
-        config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+        config=OmegaConf.to_container(cfg, resolve=True),
     )
 
     print(OmegaConf.to_yaml(cfg))

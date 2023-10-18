@@ -1,10 +1,11 @@
 import os
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
 import torch.nn.functional as F  # noqa
 from numpy.typing import NDArray
+from torch import Tensor
 from torch.utils.data import Dataset
 
 from arcworld.internal.constants import Task
@@ -71,7 +72,31 @@ def decode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
     return decoded_grid
 
 
-class TransformerOriginalDataset(Dataset):
+def encode_task(normalized_task: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    """
+    In Stefan architecture the inputs are passed as [N_Examples * 2, C, H, W]
+    where the input and output pairs are arranged contiguously. Colors of
+    original grid are encoded as binary.
+
+    Args:
+        normalized_task: Is a multidimensional array, where the shape is as follows:
+        [N_Example, 0 | 1, 30, 30], where 0 := input example, 1 := output example.
+        The value 10 marks a coordinate not belonging to the grid
+
+    Returns:
+        Array following Stefan shape, [N_Examples * 2, C, H, W].
+    """
+    n, _, h, w = normalized_task.shape
+
+    X = np.zeros((n * 2, 11, h, w), dtype=np.uint8)  # noqa
+    for i, example in enumerate(normalized_task):
+        X[i * 2, :, :, :] = _encode_colors(example[0, :, :])
+        X[i * 2 + 1, :, :, :] = _encode_colors(example[1, :, :])
+
+    return X
+
+
+class TransformerOriginalDataset(Dataset[Tuple[Tensor, Tensor, Tensor]]):
     def __init__(self, path: str, h_bound: int = 30, w_bound: int = 30):
         """
         Args:
@@ -87,7 +112,7 @@ class TransformerOriginalDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor, Tensor]:
         """
         A normalized task is a multidimensional array, where the shape is as follows:
         [N_Example, 0 | 1, 30, 30], where 0 := input example, 1 := output example.
@@ -100,15 +125,7 @@ class TransformerOriginalDataset(Dataset):
         """
         task = normalize_task(self.data[idx], h=self.h_bound, w=self.w_bound)
 
-        # In Stefan architecture the inputs are passed
-        # as [6, C, H, W] where the input and output pairs
-        # are arranged contiguously.
-        X = np.zeros((3 * 2, 11, self.h_bound, self.w_bound), dtype=np.uint8)  # noqa
-        for i, example in enumerate(task[:-1]):
-            X[i * 2, :, :, :] = _encode_colors(example[0, :, :])
-            X[i * 2 + 1, :, :, :] = _encode_colors(example[1, :, :])
-
-        X = torch.Tensor(X)  # noqa
+        X = torch.Tensor(encode_task(task[:-1]))  # noqa
         inp_test = torch.Tensor(_encode_colors(task[-1, 0, :, :]))
 
         # Output test, should not be encoded for later computing the

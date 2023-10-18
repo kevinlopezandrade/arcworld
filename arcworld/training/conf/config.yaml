@@ -8,3 +8,5 @@ project: pixeltransformer
 epochs: 1
 bs: 4
 device: cuda
+rank: ???
+world_size: ???
