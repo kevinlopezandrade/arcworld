@@ -15,7 +15,7 @@ from tqdm import tqdm
 from arcworld.training.dataloader import TransformerOriginalDataset
 from arcworld.training.metrics import ArcPixelDifference
 from arcworld.training.pixeltransformer import PixelTransformer
-from arcworld.training.train import evaluate, train
+from arcworld.training.trainer import evaluate, train
 from arcworld.training.utils import main_torch_distributed
 
 
@@ -30,6 +30,12 @@ def main(cfg: DictConfig):
         rank=RANK,
         world_size=WORLD_SIZE,
     )
+    # HACK: There is a bug in torch.distributed
+    # where processes with RANK > 0 allocate
+    # memory in cuda:0. Check issue #98763.
+    # Recommended workaround is the following.
+    torch.cuda.set_device(RANK)
+    device = torch.device(f"cuda:{RANK}")
 
     # Save output dir in wandb.
     OmegaConf.set_struct(cfg, True)
@@ -43,9 +49,8 @@ def main(cfg: DictConfig):
             config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
         )
 
+    print(f"PID: {os.getpid()}")
     print(OmegaConf.to_yaml(cfg))
-
-    device = torch.device(f"cuda:{RANK}")
 
     # Create the datasets.
     train_dataset = TransformerOriginalDataset(
@@ -60,7 +65,7 @@ def main(cfg: DictConfig):
         dataset=train_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
     )
     eval_sampler = DistributedSampler(
-        dataset=train_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
+        dataset=eval_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
     )
 
     # Create the DataLoaders
@@ -93,13 +98,8 @@ def main(cfg: DictConfig):
         train_sampler.set_epoch(epoch)
         train(model_ddp, optimizer, loss_fn, train_dataloader, device, RANK)
 
-        # Evaluate the model. Only the process with rank 0 evaluates
-        # its model, in its assiganed subset.
-        # TODO: Make use of collective calls from pytorch.dist to evaluate
-        # on the full eval dataset using all gpus.
-        if RANK == 0:
-            eval_sampler.set_epoch(epoch)
-            evaluate(model_ddp, metrics, eval_dataloader, device, RANK)
+        eval_sampler.set_epoch(epoch)
+        evaluate(model_ddp, metrics, eval_dataloader, device, RANK)
 
         if epoch % 5 == 0:
             if RANK == 0:

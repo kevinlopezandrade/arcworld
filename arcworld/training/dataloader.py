@@ -1,10 +1,11 @@
 import os
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
 import torch.nn.functional as F  # noqa
 from numpy.typing import NDArray
+from torch import Tensor
 from torch.utils.data import Dataset
 
 from arcworld.internal.constants import Task
@@ -95,7 +96,7 @@ def encode_task(normalized_task: NDArray[np.uint8]) -> NDArray[np.uint8]:
     return X
 
 
-class TransformerOriginalDataset(Dataset):
+class TransformerOriginalDataset(Dataset[Tuple[Tensor, Tensor, Tensor]]):
     def __init__(self, path: str, h_bound: int = 30, w_bound: int = 30):
         """
         Args:
@@ -111,7 +112,7 @@ class TransformerOriginalDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor, Tensor]:
         """
         A normalized task is a multidimensional array, where the shape is as follows:
         [N_Example, 0 | 1, 30, 30], where 0 := input example, 1 := output example.
