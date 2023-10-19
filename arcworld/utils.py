@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -92,7 +92,12 @@ def plot_grid(grid: NDArray[np.uint8], return_fig: bool = False):
         plt.show()
 
 
-def plot_grids(*grids, return_fig: bool = False):
+def plot_grids(
+    *grids,
+    titles: Optional[List[str]] = None,
+    sup_title: Optional[str] = None,
+    return_fig: bool = False,
+):
     fig, axes = plt.subplots(1, len(grids))
 
     for i, grid in enumerate(grids):
@@ -104,6 +109,13 @@ def plot_grids(*grids, return_fig: bool = False):
         axes[i].set_yticks([x - 0.5 for x in range(h)])
         axes[i].set_yticklabels([])
         axes[i].set_xticklabels([])
+
+        if titles:
+            if i < len(titles):
+                axes[i].set_title(titles[i])
+
+    if sup_title:
+        fig.suptitle(sup_title)
 
     if return_fig:
         plt.close(fig)

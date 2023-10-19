@@ -99,6 +99,15 @@ def _find_bounds(array: NDArray[np.uint8]) -> Tuple[int, int]:
     return (h_bound, w_bound)
 
 
+def from_array_to_task(grid: NDArray[np.uint8]) -> Task:
+    task: Task = []
+    for pair in grid:
+        example = Example(input=pair[0], output=pair[1])
+        task.append(example)
+
+    return task
+
+
 def decode_normalized_grid(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
     """
     Given a normalized grid, returns the subgrid where it does not contain
@@ -109,7 +118,7 @@ def decode_normalized_grid(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
     return grid[:h, :w]
 
 
-def decode_normalized_task(task_normalized: NDArray[np.uint8]) -> Task:
+def decode_normalized_task_sqlite(task_normalized: NDArray[np.uint8]) -> Task:
     """
     Given a numpy array, where each example is normalized to fit into a 2x30x30 grid,
     returns a Task.

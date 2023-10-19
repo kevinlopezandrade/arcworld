@@ -11,6 +11,7 @@ from torch.optim import Optimizer
 from torch.types import Device
 from torch.utils.data import DataLoader
 from torchmetrics import Metric
+from wandb.errors import Error as WandbError
 
 from arcworld.internal.constants import Example, Task
 from arcworld.training.dataloader import decode_colors
@@ -63,7 +64,11 @@ def evaluate(
         for metric in metrics:
             res = metric.compute()
             if rank is None or rank == 0:
-                wandb.log({metric.__class__.__name__: res}, commit=False)
+                # Capture exception when wandb is not initialized.
+                try:
+                    wandb.log({metric.__class__.__name__: res}, commit=False)
+                except WandbError:
+                    pass
 
         if rank is None or rank == 0:
             # Randomly plot an input, output pair.
@@ -77,11 +82,17 @@ def evaluate(
             out_test = out_test[0].cpu().numpy()
             task.append(Example(input=inp_test, output=out_test))
 
-            wandb.log({"random_task": plot_task(task, return_fig=True)}, commit=False)
-            wandb.log(
-                {"prediction": plot_grids(out_test, pred, return_fig=True)},
-                commit=False,
-            )
+            # Capture exception when wandb is not initialized.
+            try:
+                wandb.log(
+                    {"random_task": plot_task(task, return_fig=True)}, commit=False
+                )
+                wandb.log(
+                    {"prediction": plot_grids(out_test, pred, return_fig=True)},
+                    commit=False,
+                )
+            except WandbError:
+                pass
 
 
 def train(
@@ -91,7 +102,7 @@ def train(
     dataloader: DataLoader[Tuple[Tensor, Tensor, Tensor]],
     device: Device,
     rank: Optional[int] = None,
-):
+) -> float:
     """
     Performs one epoch, and backpropagates at each processed batch.
 
@@ -137,4 +148,10 @@ def train(
             epoch_loss = epoch_loss * 1 / dist.get_world_size()
 
         if rank is None or rank == 0:
-            wandb.log({loss_fn.__class__.__name__: epoch_loss}, commit=False)
+            # Capture exception when wandb is not initialized.
+            try:
+                wandb.log({loss_fn.__class__.__name__: epoch_loss}, commit=False)
+            except WandbError:
+                pass
+
+        return epoch_loss

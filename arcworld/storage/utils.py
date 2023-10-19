@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import MetaData, create_engine, select
 
 from arcworld.internal.constants import Task
-from arcworld.storage.fingerprint import decode_normalized_task
+from arcworld.storage.fingerprint import decode_normalized_task_sqlite
 
 
 def get_task(id: str, path: str) -> Optional[Task]:
@@ -29,6 +29,6 @@ def get_task(id: str, path: str) -> Optional[Task]:
             row = connection.execute(query).first()
 
             if row:
-                return decode_normalized_task(row.task)
+                return decode_normalized_task_sqlite(row.task)
             else:
                 return None

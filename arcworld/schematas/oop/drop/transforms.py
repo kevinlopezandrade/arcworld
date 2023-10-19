@@ -131,9 +131,24 @@ def get_max_dimension_filter(dim: float) -> Callable[[Shape], bool]:
 
 
 class DropBidirectional(GridsNewTransform):
-    def __init__(self, max_shape_dimesion: float = 3) -> None:
+    def __init__(
+        self,
+        max_shape_dimesion: float = 3,
+        grid_dimensions_range: Tuple[int, int] = (20, 25),
+        max_shapes_range: Tuple[int, int] = (5, 15),
+        bar_orientations: Tuple[BarOrientation, ...] = (
+            BarOrientation.H,
+            BarOrientation.V,
+        ),
+        holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
+    ) -> None:
         self._max_shape_dimension = max_shape_dimesion
         self.program = self.__class__.__name__
+
+        self.grid_dimensions_range = grid_dimensions_range
+        self.max_shapes_range = max_shapes_range
+        self.bar_orientations = bar_orientations
+        self.holes_fraction_range = holes_fraction_range
 
     @property
     def filters(self) -> List[ShapesFilter]:
@@ -146,16 +161,7 @@ class DropBidirectional(GridsNewTransform):
         else:
             return []
 
-    def grid_sampler(
-        self,
-        grid_dimensions_range: Tuple[int, int] = (20, 25),
-        max_shapes_range: Tuple[float, float] = (5, 15),
-        bar_orientations: Tuple[BarOrientation, ...] = (
-            BarOrientation.H,
-            BarOrientation.V,
-        ),
-        holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
-    ) -> Callable[[], GravityGridBuilder]:
+    def grid_sampler(self) -> Callable[[], GravityGridBuilder]:
         """
         Creates a grid builder with random parameters.
         """
@@ -163,16 +169,16 @@ class DropBidirectional(GridsNewTransform):
         bar_color = random.choice(list(ALLOWED_COLORS - {bg_color}))
 
         def sampler():
-            h = random.randint(*grid_dimensions_range)
-            w = random.randint(*grid_dimensions_range)
+            h = random.randint(*self.grid_dimensions_range)
+            w = random.randint(*self.grid_dimensions_range)
 
-            if math.inf in max_shapes_range:
+            if math.inf in self.max_shapes_range:
                 max_shapes = math.inf
             else:
-                max_shapes = random.randint(*max_shapes_range)
+                max_shapes = random.randint(*self.max_shapes_range)
 
-            bar_orientation = random.choice(bar_orientations)
-            holes_fraction = random.uniform(*holes_fraction_range)
+            bar_orientation = random.choice(self.bar_orientations)
+            holes_fraction = random.uniform(*self.holes_fraction_range)
 
             return GravityGridBuilder(
                 height=h,
@@ -303,8 +309,24 @@ class DropBidirectional(GridsNewTransform):
 
 
 class DropBidirectionalDots(DropBidirectional):
-    def __init__(self) -> None:
-        self.program = self.__class__.__name__
+    def __init__(
+        self,
+        max_shape_dimesion: float = 1,
+        grid_dimensions_range: Tuple[int, int] = (20, 25),
+        max_shapes_range: Tuple[int, int] = (5, 15),
+        bar_orientations: Tuple[BarOrientation, ...] = (
+            BarOrientation.H,
+            BarOrientation.V,
+        ),
+        holes_fraction_range: Tuple[float, float] = (0, 0.5),
+    ) -> None:
+        super().__init__(
+            max_shape_dimesion,
+            grid_dimensions_range,
+            max_shapes_range,
+            bar_orientations,
+            holes_fraction_range,
+        )
 
     @property
     def filters(self) -> List[ShapesFilter]:
@@ -322,11 +344,11 @@ class DropBidirectionalDots(DropBidirectional):
         bar_color = random.choice(list(ALLOWED_COLORS - {bg_color}))
 
         def sampler():
-            h = random.randint(20, 25)
-            w = random.randint(20, 25)
-            max_shapes = random.randint(5, 20)
-            bar_orientation = random.choice([BarOrientation.H, BarOrientation.V])
-            holes_fraction = random.uniform(0, 0.5)
+            h = random.randint(*self.grid_dimensions_range)
+            w = random.randint(*self.grid_dimensions_range)
+            max_shapes = random.randint(*self.max_shapes_range)
+            bar_orientation = random.choice(self.bar_orientations)
+            holes_fraction = random.uniform(*self.holes_fraction_range)
 
             builder = GravityGridBuilder(
                 height=h,
@@ -383,31 +405,41 @@ class DropBidirectionalDots(DropBidirectional):
 
 
 class Gravitate(DropBidirectional):
-    def grid_sampler(
+    def __init__(
         self,
+        max_shape_dimesion: float = 3,
         grid_dimensions_range: Tuple[int, int] = (20, 25),
-        max_shapes_range: Tuple[float, float] = (5, 15),
+        max_shapes_range: Tuple[int, int] = (5, 15),
         bar_orientations: Tuple[BarOrientation, ...] = (
             BarOrientation.H,
             BarOrientation.V,
         ),
         holes_fraction_range: Tuple[float, float] = (0, 2 / 4),
-    ) -> Callable[[], GravityGridBuilder]:
+    ) -> None:
+        super().__init__(
+            max_shape_dimesion,
+            grid_dimensions_range,
+            max_shapes_range,
+            bar_orientations,
+            holes_fraction_range,
+        )
+
+    def grid_sampler(self) -> Callable[[], GravityGridBuilder]:
         """
         Creates a grid builder with random parameters.
         """
         bg_color = random.choice(list(ALLOWED_COLORS))
         bar_color = random.choice(list(ALLOWED_COLORS - {bg_color}))
-        bar_orientation = random.choice(bar_orientations)
+        bar_orientation = random.choice(self.bar_orientations)
 
         def sampler():
-            h = random.randint(*grid_dimensions_range)
-            w = random.randint(*grid_dimensions_range)
+            h = random.randint(*self.grid_dimensions_range)
+            w = random.randint(*self.grid_dimensions_range)
 
-            if math.inf in max_shapes_range:
+            if math.inf in self.max_shapes_range:
                 max_shapes = math.inf
             else:
-                max_shapes = random.randint(*max_shapes_range)
+                max_shapes = random.randint(*self.max_shapes_range)
 
             holes_fraction = 0.0
 

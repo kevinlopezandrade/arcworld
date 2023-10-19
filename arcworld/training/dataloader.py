@@ -35,7 +35,7 @@ def _read_arc_json_files(path: str) -> List[Task]:
     return tasks
 
 
-def _encode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
+def encode_colors(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
     """
     Given a grid encodes the colors following a binary
     encoding where each channel represents a color.
@@ -90,8 +90,8 @@ def encode_task(normalized_task: NDArray[np.uint8]) -> NDArray[np.uint8]:
 
     X = np.zeros((n * 2, 11, h, w), dtype=np.uint8)  # noqa
     for i, example in enumerate(normalized_task):
-        X[i * 2, :, :, :] = _encode_colors(example[0, :, :])
-        X[i * 2 + 1, :, :, :] = _encode_colors(example[1, :, :])
+        X[i * 2, :, :, :] = encode_colors(example[0, :, :])
+        X[i * 2 + 1, :, :, :] = encode_colors(example[1, :, :])
 
     return X
 
@@ -126,7 +126,7 @@ class TransformerOriginalDataset(Dataset[Tuple[Tensor, Tensor, Tensor]]):
         task = normalize_task(self.data[idx], h=self.h_bound, w=self.w_bound)
 
         X = torch.Tensor(encode_task(task[:-1]))  # noqa
-        inp_test = torch.Tensor(_encode_colors(task[-1, 0, :, :]))
+        inp_test = torch.Tensor(encode_colors(task[-1, 0, :, :]))
 
         # Output test, should not be encoded for later computing the
         # cross entropy loss.

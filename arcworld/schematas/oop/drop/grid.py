@@ -141,7 +141,7 @@ class GravityGridBuilder:
             if self.resampler is None:
                 # TODO: Decide which strategy is better either sample
                 # without replacement or with replacement.
-                sampled_shapes = random.sample(list(shapes), k=int(N))
+                sampled_shapes = random.choices(list(shapes), k=int(N))
             else:
                 sampled_shapes = self.resampler.resample(
                     shapes, n_shapes_per_grid=int(N)
