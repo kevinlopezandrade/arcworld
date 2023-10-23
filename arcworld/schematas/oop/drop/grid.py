@@ -9,7 +9,7 @@ from arcworld.dsl.arc_types import Coordinates, Shapes
 from arcworld.dsl.functional import normalize, recolor, shift, toindices, width
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.internal.constants import ALLOWED_COLORS, DoesNotFitError
-from arcworld.schematas.oop.subgrid_pickup.resamplers import Resampler
+from arcworld.shape.resamplers import Resampler
 
 
 def _draw_holes(proto_shape: Coordinates, n_holes: int) -> Coordinates:
