@@ -21,7 +21,6 @@ from arcworld.dsl.functional import (
     toindices,
 )
 from arcworld.dsl.util import build_function_from_program
-from arcworld.internal.complexity import Complexity
 
 
 class Program:
@@ -39,9 +38,7 @@ class Program:
 
 
 class FilterProgram(Program):
-    def __init__(
-        self, name: str, program_str: str, complexity: Complexity = Complexity.EASY
-    ):
+    def __init__(self, name: str, program_str: str):
         super().__init__(name, program_str)
         self._program = build_function_from_program(program_str)
 
@@ -59,7 +56,6 @@ class TransformProgram(Program):
         name: str,
         program_str: str,
         margin: int = 2,
-        complexity: Complexity = Complexity.EASY,
     ):
         super().__init__(name, program_str)
 
@@ -72,7 +68,6 @@ class TransformProgram(Program):
             raw_program, margin
         )
         self._margin = margin
-        self._complexity = Complexity.EASY
 
     @property
     def program(self) -> Callable[..., Any]:

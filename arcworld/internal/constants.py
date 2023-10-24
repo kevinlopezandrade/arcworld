@@ -4,10 +4,7 @@ import numpy as np
 from matplotlib import colors
 from numpy.typing import NDArray
 
-MAX_GRID_SIZE = 30
-MIN_GRID_SIZE = 1
 ALLOWED_COLORS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-PADDING = -1
 
 COLORMAP = colors.ListedColormap(
     [
@@ -28,14 +25,6 @@ NORM = colors.Normalize(vmin=0, vmax=10)
 
 
 class DoesNotFitError(Exception):
-    pass
-
-
-class ShapeOutOfBoundsError(Exception):
-    pass
-
-
-class GridConstructionError(RuntimeError):
     pass
 
 

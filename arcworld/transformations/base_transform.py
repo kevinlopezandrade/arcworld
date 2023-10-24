@@ -1,8 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any, List, Protocol
-
-import numpy as np
-from numpy.typing import NDArray
+from typing import Any, Protocol
 
 from arcworld.dsl.arc_types import Shapes
 
@@ -17,43 +14,11 @@ class ShapesTransform(metaclass=ABCMeta):
         pass
 
 
-class GridsNewTransform(metaclass=ABCMeta):
-    """
-    Interace for every grid transform
-    """
-
-    @classmethod
-    @property
-    def name(cls) -> str:
-        return cls.__name__
-
-    @abstractmethod
-    def transform(self, grid) -> Any:
-        pass
-
-
-class GridsTransform(metaclass=ABCMeta):
-    """
-    Interface for evey grid transform
-    """
-
+class TransformProtocol(Protocol):
     @property
     def name(self) -> str:
-        return self.__class__.__name__
+        ...
 
     @abstractmethod
-    def transform(
-        self, grids: List[NDArray[np.int8]], seed: int
-    ) -> List[NDArray[np.int8]]:
-        pass
-
-
-class TransformProtocol(Protocol):
-    # @classmethod
-    # @property
-    # def name(cls) -> str:
-    #     ...
-    #
-    @abstractmethod
-    def transform(self, grid) -> Any:
+    def transform(self, grid: Any) -> Any:
         ...
