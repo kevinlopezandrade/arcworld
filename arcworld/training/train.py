@@ -45,7 +45,11 @@ def _task_from_sequence(seq: FloatTensor) -> Task:
 
 
 def evaluate(
-    model: nn.Module, metrics: List[Metric], dataloader: DataLoader, device: Device
+    model: nn.Module,
+    metrics: List[Metric],
+    dataloader: DataLoader,
+    device: Device,
+    eval_name,
 ):
     """
     Evalutes the model over the passed metrics without computing gradients.
@@ -69,7 +73,10 @@ def evaluate(
                 metric(pred, out_test)
 
         for metric in metrics:
-            wandb.log({metric.__class__.__name__: metric.compute()}, commit=False)
+            wandb.log(
+                {metric.__class__.__name__ + "-" + eval_name: metric.compute()},
+                commit=False,
+            )
             metric.reset()
 
         # Randomly plot an input, output pair.
@@ -141,14 +148,10 @@ def main(cfg: DictConfig):
         name=cfg.wandb_run_name,
     )
 
-    print(OmegaConf.to_yaml(cfg))
-
     device = torch.device(cfg.device)
+
     train_dataset = TransformerOriginalDataset(
         cfg.dataset.train_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
-    )
-    eval_dataset = TransformerOriginalDataset(
-        cfg.dataset.eval_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
     )
 
     train_dataloader = DataLoader(
@@ -157,12 +160,24 @@ def main(cfg: DictConfig):
         shuffle=True,
         num_workers=0,
     )
-    eval_dataloader = DataLoader(
-        eval_dataset,
-        batch_size=cfg.bs,
-        shuffle=True,
-        num_workers=0,
-    )
+
+    eval_dataloaders = {}
+    for i in range(len(cfg.validation_sets)):
+        eval_name = str(cfg.dataset.eval_path[i]).split("/")[-1]
+
+        e = TransformerOriginalDataset(
+            cfg.dataset.eval_path[i],
+            h_bound=cfg.dataset.h_bound,
+            w_bound=cfg.dataset.w_bound,
+        )
+
+        dl = DataLoader(
+            e,
+            batch_size=cfg.bs,
+            shuffle=True,
+            num_workers=0,
+        )
+        eval_dataloaders[eval_name] = dl
 
     if cfg.model == "modified":
         model = PixelTransformerModified(
@@ -199,7 +214,9 @@ def main(cfg: DictConfig):
     ]
     for epoch in tqdm(range(cfg.epochs), desc="Training"):
         train(model, optimizer, loss_fn, train_dataloader, device)
-        evaluate(model, metrics, eval_dataloader, device)
+
+        for eval_name in eval_dataloaders:
+            evaluate(model, metrics, eval_dataloaders[eval_name], device, eval_name)
 
         if epoch % 5 == 0:
             hydra_cfg = hydra.core.hydra_config.HydraConfig.get()

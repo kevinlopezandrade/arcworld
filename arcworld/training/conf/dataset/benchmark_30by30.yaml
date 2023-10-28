@@ -1,0 +1,4 @@
+train_path: /home/yassine/dataset/mix_of_tasks_conditional_transform/training
+eval_path: /home/yassine/dataset/mix_of_tasks_conditional_transform/evaluation
+h_bound: 10
+w_bound: 10

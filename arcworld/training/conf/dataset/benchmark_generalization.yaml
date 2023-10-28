@@ -1,0 +1,11 @@
+train_path: /home/yassine/dataset/generalization/training
+eval_path:
+  - /home/yassine/dataset/generalization/in_distribution
+  - /home/yassine/dataset/generalization/N_Shape
+  - /home/yassine/dataset/generalization/Shape_Size
+  - /home/yassine/dataset/generalization/Right_Transforms
+  - /home/yassine/dataset/generalization/Transforms
+  - /home/yassine/dataset/generalization/Composition
+  - /home/yassine/dataset/generalization/Grid_Size
+h_bound: 15
+w_bound: 15

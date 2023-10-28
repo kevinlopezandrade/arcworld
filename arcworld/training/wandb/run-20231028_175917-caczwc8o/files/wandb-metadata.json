@@ -1,0 +1,45 @@
+{
+    "os": "Windows-10-10.0.19045-SP0",
+    "python": "3.10.13",
+    "heartbeatAt": "2023-10-28T15:59:23.156097",
+    "startedAt": "2023-10-28T15:59:17.013475",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "C:\\Users\\test\\Documents\\kevin_arc\\arcworld\\arcworld\\training\\train.py",
+    "codePathLocal": "train.py",
+    "codePath": "arcworld\\training\\train.py",
+    "git": {
+        "remote": "https://github.com/kevinlopezandrade/arcworld.git",
+        "commit": "0d1f1fd8b4cf9fc737e7fb4fc615a2c636a36784"
+    },
+    "email": "ybenchekroun@outlook.com",
+    "root": "C:/Users/test/Documents/kevin_arc/arcworld",
+    "host": "DESKTOP-BUC9840",
+    "username": "test",
+    "executable": "C:\\Users\\test\\anaconda3\\envs\\arcworld_kevin\\python.exe",
+    "cpu_count": 2,
+    "cpu_count_logical": 4,
+    "cpu_freq": {
+        "current": 798.0,
+        "min": 0.0,
+        "max": 2496.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 798.0,
+            "min": 0.0,
+            "max": 2496.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 237.8425407409668,
+            "used": 131.91781997680664
+        }
+    },
+    "memory": {
+        "total": 19.413753509521484
+    }
+}
