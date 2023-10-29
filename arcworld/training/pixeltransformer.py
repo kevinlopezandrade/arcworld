@@ -2,13 +2,22 @@ import math
 import warnings
 
 import torch.nn
-from torch import nn
-from torch.nn import (
-    Linear,
+from models.No_LayerNorm_Count import (
+    TransformerDecoder,
     TransformerDecoderLayer,
     TransformerEncoder,
     TransformerEncoderLayer,
 )
+from torch import nn
+
+# from torch.nn import (
+#     Linear,
+#     TransformerDecoderLayer,
+#     TransformerEncoder,
+#     TransformerEncoderLayer,
+#     TransformerDecoder,
+# )
+from torch.nn import Linear
 from torch.nn.init import xavier_uniform_
 
 
@@ -484,7 +493,7 @@ class PixelTransformer(nn.Module):
             self.d_model, num_decoder_heads, dim_feedforward, norm_first=True
         )
 
-        self.decoder = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers)
+        self.decoder = TransformerDecoder(decoder_layer, num_decoder_layers)
         self.final = Output2d(self.d_model)
 
         self.register_buffer(

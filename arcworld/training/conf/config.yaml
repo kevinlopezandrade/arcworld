@@ -1,26 +1,16 @@
 defaults:
   - _self_
   - optim: adamw
-
-training_set: generalization/training
-
-validation_sets:
-  - generalization/Grid_Size
-  - generalization/N_Shape
-  - generalization/Shape_Size
-  - generalization/Transforms
-  - generalization/Right_Transforms
-  - generalization/Composition
-  - generalization/in_distribution
+  - dataset: generalization_translate
 
 user: arcworld
 project: generalization_benchmark
 model: modified
-wandb_run_name: generalization_1
+wandb_run_name: generalization_2_full90k
 wandb_notes:
 pos_encoding: 2D
 embedding: conv
-embedding_scaling: 1
+embedding_scaling: 2
 epochs: 30
-bs: 16
+bs: 32
 device: cuda

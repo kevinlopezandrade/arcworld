@@ -90,9 +90,13 @@ def evaluate(
         out_test = out_test[0].cpu().numpy()
         task.append(Example(input=inp_test, output=out_test))
 
-        wandb.log({"random_task": plot_task(task, return_fig=True)}, commit=False)
         wandb.log(
-            {"prediction": plot_grids(out_test, pred, return_fig=True)}, commit=False
+            {"random_task -" + eval_name: plot_task(task, return_fig=True)},
+            commit=False,
+        )
+        wandb.log(
+            {"prediction -" + eval_name: plot_grids(out_test, pred, return_fig=True)},
+            commit=False,
         )
 
 
@@ -162,9 +166,8 @@ def main(cfg: DictConfig):
     )
 
     eval_dataloaders = {}
-    for i in range(len(cfg.validation_sets)):
+    for i in range(len(cfg.dataset.eval_path)):
         eval_name = str(cfg.dataset.eval_path[i]).split("/")[-1]
-
         e = TransformerOriginalDataset(
             cfg.dataset.eval_path[i],
             h_bound=cfg.dataset.h_bound,
