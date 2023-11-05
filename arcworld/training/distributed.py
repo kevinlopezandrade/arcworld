@@ -6,6 +6,7 @@ import torch
 import torch.distributed as dist
 import torch.nn as nn
 import wandb
+from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf, open_dict
 from torch.nn.parallel.distributed import DistributedDataParallel
 from torch.utils.data import DataLoader
@@ -15,7 +16,6 @@ from tqdm import tqdm
 
 from arcworld.training.dataloader import ARC_TENSOR, TransformerOriginalDataset
 from arcworld.training.metrics import ArcPixelDifference
-from arcworld.training.models.pixeltransformer import PixelTransformer
 from arcworld.training.trainer import evaluate, train
 from arcworld.training.utils import main_torch_distributed
 
@@ -90,7 +90,8 @@ def main(cfg: DictConfig):
 
         eval_dataloaders.append(eval_dataloader)
 
-    model = PixelTransformer(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
+    partial_model = instantiate(cfg.model)
+    model = partial_model(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
     model_ddp = DistributedDataParallel(model, device_ids=[RANK], output_device=RANK)
     model_ddp.train()
 
