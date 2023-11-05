@@ -4,6 +4,7 @@ from typing import List
 import hydra
 import torch
 import wandb
+from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf, open_dict
 from torch import nn
 from torch.utils.data import DataLoader
@@ -12,7 +13,6 @@ from tqdm import tqdm
 
 from arcworld.training.dataloader import ARC_TENSOR, TransformerOriginalDataset
 from arcworld.training.metrics import ArcPixelDifference
-from arcworld.training.models.pixeltransformer import PixelTransformer
 from arcworld.training.trainer import evaluate, train
 
 
@@ -59,7 +59,8 @@ def main(cfg: DictConfig):
         )
         eval_dataloaders.append(eval_dataloader)
 
-    model = PixelTransformer(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
+    partial_model = instantiate(cfg.model)
+    model = partial_model(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
     model.train()
 
     params = [p for p in model.parameters() if p.requires_grad]

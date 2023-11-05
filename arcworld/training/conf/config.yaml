@@ -2,6 +2,7 @@ defaults:
   - _self_
   - dataset: translate_rotate
   - optim: adamw
+  - model: pixeltransformer
 
 user: arcworld
 project: pixeltransformer
