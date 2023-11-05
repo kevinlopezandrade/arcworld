@@ -46,6 +46,8 @@ def main(cfg: DictConfig):
         wandb.init(
             entity=cfg.user,
             project=cfg.project,
+            name=cfg.wandb_run_name,
+            notes=cfg.wandb_notes,
             config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
         )
 
