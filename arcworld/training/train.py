@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import hydra
 import torch
@@ -9,7 +10,7 @@ from torch.utils.data import DataLoader
 from torchmetrics.classification import Accuracy
 from tqdm import tqdm
 
-from arcworld.training.dataloader import TransformerOriginalDataset
+from arcworld.training.dataloader import ARC_TENSOR, TransformerOriginalDataset
 from arcworld.training.metrics import ArcPixelDifference
 from arcworld.training.pixeltransformer import PixelTransformer
 from arcworld.training.trainer import evaluate, train
@@ -25,8 +26,8 @@ def main(cfg: DictConfig):
     wandb.init(
         entity=cfg.user,
         project=cfg.project,
-        name=cfg.wandb_run_name,
-        notes=cfg.wandb_notes,
+        name=cfg.get("wandb_run_name", None),
+        notes=cfg.get("wandb_notes", None),
         config=OmegaConf.to_container(cfg, resolve=True),
     )
 
@@ -36,9 +37,6 @@ def main(cfg: DictConfig):
     train_dataset = TransformerOriginalDataset(
         cfg.dataset.train_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
     )
-    eval_dataset = TransformerOriginalDataset(
-        cfg.dataset.eval_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
-    )
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -46,12 +44,20 @@ def main(cfg: DictConfig):
         shuffle=True,
         num_workers=0,
     )
-    eval_dataloader = DataLoader(
-        eval_dataset,
-        batch_size=cfg.bs,
-        shuffle=True,
-        num_workers=0,
-    )
+
+    # NOTE: Datasets are still small in scale, so we construct all of them
+    # and stored in memory. For bigger loads we need to rethink this.
+    eval_dataloaders: List[DataLoader[ARC_TENSOR]] = []
+    for path in cfg.dataset.eval_paths:
+        eval_dataloader = DataLoader(
+            TransformerOriginalDataset(
+                path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+            ),
+            batch_size=cfg.bs,
+            shuffle=True,
+            num_workers=0,
+        )
+        eval_dataloaders.append(eval_dataloader)
 
     model = PixelTransformer(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
     model.train()
@@ -67,7 +73,8 @@ def main(cfg: DictConfig):
     ]
     for epoch in tqdm(range(cfg.epochs), desc="Training"):
         train(model, optimizer, loss_fn, train_dataloader, device)
-        evaluate(model, metrics, eval_dataloader, device)
+        for eval_dataloader in eval_dataloaders:
+            evaluate(model, metrics, eval_dataloader, device)
 
         if epoch % 5 == 0:
             hydra_cfg = hydra.core.hydra_config.HydraConfig.get()

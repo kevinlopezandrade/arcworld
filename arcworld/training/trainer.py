@@ -49,6 +49,13 @@ def evaluate(
         dataloader: DataLoader from which to get the batches.
         device: Device used to store the tensors.
     """
+    dataset_id = getattr(dataloader.dataset, "id", None)
+
+    if dataset_id:
+        suffix = f" - {dataset_id}"
+    else:
+        suffix = ""
+
     model.eval()
     with torch.no_grad():
         for seq, inp_test, out_test in dataloader:
@@ -66,7 +73,7 @@ def evaluate(
             if rank is None or rank == 0:
                 # Capture exception when wandb is not initialized.
                 try:
-                    wandb.log({metric.__class__.__name__: res}, commit=False)
+                    wandb.log({metric.__class__.__name__ + suffix: res}, commit=False)
                 except WandbError:
                     pass
 
@@ -85,10 +92,14 @@ def evaluate(
             # Capture exception when wandb is not initialized.
             try:
                 wandb.log(
-                    {"random_task": plot_task(task, return_fig=True)}, commit=False
+                    {"random_task" + suffix: plot_task(task, return_fig=True)},
+                    commit=False,
                 )
                 wandb.log(
-                    {"prediction": plot_grids(out_test, pred, return_fig=True)},
+                    {
+                        "prediction"
+                        + suffix: plot_grids(out_test, pred, return_fig=True)
+                    },
                     commit=False,
                 )
             except WandbError:

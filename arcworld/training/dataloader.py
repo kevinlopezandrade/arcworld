@@ -12,6 +12,8 @@ from arcworld.internal.constants import Task
 from arcworld.storage.fingerprint import normalize_task
 from arcworld.utils import decode_json_task
 
+ARC_TENSOR = Tuple[Tensor, Tensor, Tensor]
+
 
 def _read_arc_json_files(path: str) -> List[Task]:
     """
@@ -96,7 +98,7 @@ def encode_task(normalized_task: NDArray[np.uint8]) -> NDArray[np.uint8]:
     return X
 
 
-class TransformerOriginalDataset(Dataset[Tuple[Tensor, Tensor, Tensor]]):
+class TransformerOriginalDataset(Dataset[ARC_TENSOR]):
     def __init__(self, path: str, h_bound: int = 30, w_bound: int = 30):
         """
         Args:
@@ -108,6 +110,11 @@ class TransformerOriginalDataset(Dataset[Tuple[Tensor, Tensor, Tensor]]):
         self.data = _read_arc_json_files(path)
         self.h_bound = h_bound
         self.w_bound = w_bound
+        self._id = os.path.basename(os.path.normpath(self.path))
+
+    @property
+    def id(self) -> str:
+        return self._id
 
     def __len__(self):
         return len(self.data)
