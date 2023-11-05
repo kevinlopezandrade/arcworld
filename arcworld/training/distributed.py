@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from arcworld.training.dataloader import ARC_TENSOR, TransformerOriginalDataset
 from arcworld.training.metrics import ArcPixelDifference
-from arcworld.training.pixeltransformer import PixelTransformer
+from arcworld.training.models.pixeltransformer import PixelTransformer
 from arcworld.training.trainer import evaluate, train
 from arcworld.training.utils import main_torch_distributed
 
