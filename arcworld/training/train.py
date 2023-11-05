@@ -46,7 +46,7 @@ def main(cfg: DictConfig):
     )
 
     # NOTE: Datasets are still small in scale, so we construct all of them
-    # and stored in memory. For bigger loads we need to rethink this.
+    # and store them in memory. For bigger loads we need to rethink this.
     eval_dataloaders: List[DataLoader[ARC_TENSOR]] = []
     for path in cfg.dataset.eval_paths:
         eval_dataloader = DataLoader(

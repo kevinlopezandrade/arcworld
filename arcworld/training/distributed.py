@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import hydra
 import torch
@@ -12,7 +13,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torchmetrics.classification import Accuracy
 from tqdm import tqdm
 
-from arcworld.training.dataloader import TransformerOriginalDataset
+from arcworld.training.dataloader import ARC_TENSOR, TransformerOriginalDataset
 from arcworld.training.metrics import ArcPixelDifference
 from arcworld.training.pixeltransformer import PixelTransformer
 from arcworld.training.trainer import evaluate, train
@@ -46,9 +47,9 @@ def main(cfg: DictConfig):
         wandb.init(
             entity=cfg.user,
             project=cfg.project,
-            name=cfg.wandb_run_name,
-            notes=cfg.wandb_notes,
-            config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+            name=cfg.get("wandb_run_name", None),
+            notes=cfg.get("wandb_notes", None),
+            config=OmegaConf.to_container(cfg, resolve=True),
         )
 
     print(f"PID: {os.getpid()}")
@@ -58,16 +59,10 @@ def main(cfg: DictConfig):
     train_dataset = TransformerOriginalDataset(
         cfg.dataset.train_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
     )
-    eval_dataset = TransformerOriginalDataset(
-        cfg.dataset.eval_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
-    )
 
     # Create the Distributed Samplers
     train_sampler = DistributedSampler(
         dataset=train_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
-    )
-    eval_sampler = DistributedSampler(
-        dataset=eval_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
     )
 
     # Create the DataLoaders
@@ -76,11 +71,24 @@ def main(cfg: DictConfig):
         sampler=train_sampler,
         batch_size=cfg.bs,
     )
-    eval_dataloader = DataLoader(
-        eval_dataset,
-        sampler=eval_sampler,
-        batch_size=cfg.bs,
-    )
+
+    # NOTE: Datasets are still small in scale, so we construct all of them
+    # and store them in memory. For bigger loads we need to rethink this.
+    eval_dataloaders: List[DataLoader[ARC_TENSOR]] = []
+    for path in cfg.dataset.eval_paths:
+        eval_dataset = TransformerOriginalDataset(
+            path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+        )
+        eval_sampler = DistributedSampler(
+            dataset=eval_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
+        )
+        eval_dataloader = DataLoader(
+            eval_dataset,
+            sampler=eval_sampler,
+            batch_size=cfg.bs,
+        )
+
+        eval_dataloaders.append(eval_dataloader)
 
     model = PixelTransformer(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
     model_ddp = DistributedDataParallel(model, device_ids=[RANK], output_device=RANK)
@@ -100,8 +108,9 @@ def main(cfg: DictConfig):
         train_sampler.set_epoch(epoch)
         train(model_ddp, optimizer, loss_fn, train_dataloader, device, RANK)
 
-        eval_sampler.set_epoch(epoch)
-        evaluate(model_ddp, metrics, eval_dataloader, device, RANK)
+        for eval_dataloader in eval_dataloaders:
+            eval_dataloader.sampler.set_epoch(epoch)
+            evaluate(model_ddp, metrics, eval_dataloader, device, RANK)
 
         if epoch % 5 == 0:
             if RANK == 0:
