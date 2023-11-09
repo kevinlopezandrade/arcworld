@@ -1,0 +1,5 @@
+_target_: models.pixeltransformer_modified.PixelTransformerModified
+_partial_: true
+pos_encoding: 2D
+embedding: conv
+embedding_scaling: 1
