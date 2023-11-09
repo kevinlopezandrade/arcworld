@@ -35,7 +35,10 @@ def main(cfg: DictConfig):
 
     device = torch.device(cfg.device)
     train_dataset = TransformerOriginalDataset(
-        cfg.dataset.train_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+        cfg.dataset.train_path,
+        h_bound=cfg.dataset.h_bound,
+        w_bound=cfg.dataset.w_bound,
+        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
     )
 
     train_dataloader = DataLoader(
@@ -51,7 +54,10 @@ def main(cfg: DictConfig):
     for path in cfg.dataset.eval_paths:
         eval_dataloader = DataLoader(
             TransformerOriginalDataset(
-                path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+                path,
+                h_bound=cfg.dataset.h_bound,
+                w_bound=cfg.dataset.w_bound,
+                max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
             ),
             batch_size=cfg.bs,
             shuffle=True,
@@ -60,7 +66,11 @@ def main(cfg: DictConfig):
         eval_dataloaders.append(eval_dataloader)
 
     partial_model = instantiate(cfg.model)
-    model = partial_model(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
+    model = partial_model(
+        h=cfg.dataset.h_bound,
+        w=cfg.dataset.w_bound,
+        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+    ).to(device)
     model.train()
 
     params = [p for p in model.parameters() if p.requires_grad]

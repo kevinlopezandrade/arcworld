@@ -1,4 +1,5 @@
 import os
+import random
 from typing import List, Tuple
 
 import numpy as np
@@ -99,17 +100,27 @@ def encode_task(normalized_task: NDArray[np.uint8]) -> NDArray[np.uint8]:
 
 
 class TransformerOriginalDataset(Dataset[ARC_TENSOR]):
-    def __init__(self, path: str, h_bound: int = 30, w_bound: int = 30):
+    def __init__(
+        self,
+        path: str,
+        h_bound: int = 30,
+        w_bound: int = 30,
+        max_input_otput_pairs: int = 4,
+    ):
         """
         Args:
             path: Path of the directory containing the json files
             h_bound: Height to which normalize the grids.
             w_bound: Width to which normalize the grids.
+            max_input_otput_pairs: Maximum number of input output pairs used for the
+                normalization of a task.
         """
         self.path = path
         self.data = _read_arc_json_files(path)
         self.h_bound = h_bound
         self.w_bound = w_bound
+        self.max_input_otput_pairs = max_input_otput_pairs
+
         self._id = os.path.basename(os.path.normpath(self.path))
 
     @property
@@ -130,7 +141,21 @@ class TransformerOriginalDataset(Dataset[ARC_TENSOR]):
             inp_test: Tensor with shape [C, H, W]
             out_test: Tensor with shape [C, H, W]
         """
-        task = normalize_task(self.data[idx], h=self.h_bound, w=self.w_bound)
+        N = len(self.data[idx])  # noqa
+        data = self.data[idx]
+
+        if N > self.max_input_otput_pairs:
+            # The last element is always the test sample.
+            data = random.sample(data[:-1], k=self.max_input_otput_pairs - 1) + [
+                data[-1]
+            ]
+
+        task = normalize_task(
+            data,
+            h=self.h_bound,
+            w=self.w_bound,
+            max_input_otput_pairs=self.max_input_otput_pairs,
+        )
 
         X = torch.Tensor(encode_task(task[:-1]))  # noqa
         inp_test = torch.Tensor(encode_colors(task[-1, 0, :, :]))

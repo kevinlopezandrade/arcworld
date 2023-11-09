@@ -6,8 +6,6 @@ from numpy.typing import NDArray
 
 from arcworld.internal.constants import Example, Task
 
-MAX_PAIRS = 4
-
 
 def _all_permutations(pre: Task, post: Task, res: List[Task]):
     if len(pre) == 0:
@@ -37,7 +35,9 @@ def hash_task(task: Task) -> str:
     return hash
 
 
-def normalize_task(task: Task, h: int = 30, w: int = 30) -> NDArray[np.uint8]:
+def normalize_task(
+    task: Task, h: int = 30, w: int = 30, max_input_otput_pairs: int = 4
+) -> NDArray[np.uint8]:
     """
     Given a task normalize the task examples so that all of them are placed
     at the top left corner of a hxw grid. We use 10 as value to flag a pixel
@@ -48,7 +48,10 @@ def normalize_task(task: Task, h: int = 30, w: int = 30) -> NDArray[np.uint8]:
         task: Task to be normalized
         h: Height of the normalized grid
         w: Width of the normalized grid
+        max_input_otput_pairs: Maximum input output pairs of the normalized task.
     """
+    MAX_PAIRS = max_input_otput_pairs  # noqa
+
     N = len(task)  # noqa
 
     if N > MAX_PAIRS:
@@ -118,11 +121,14 @@ def decode_normalized_grid(grid: NDArray[np.uint8]) -> NDArray[np.uint8]:
     return grid[:h, :w]
 
 
-def decode_normalized_task_sqlite(task_normalized: NDArray[np.uint8]) -> Task:
+def decode_normalized_task_sqlite(
+    task_normalized: NDArray[np.uint8], max_input_otput_pairs: int = 4
+) -> Task:
     """
     Given a numpy array, where each example is normalized to fit into a 2x30x30 grid,
     returns a Task.
     """
+    MAX_PAIRS = max_input_otput_pairs  # noqa
     tasks: Task = []
 
     try:

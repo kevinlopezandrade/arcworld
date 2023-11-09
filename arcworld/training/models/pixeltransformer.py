@@ -1,8 +1,9 @@
 import math
+import random
 import warnings
 
 import torch.nn
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import (
     Linear,
     TransformerDecoder,
@@ -234,13 +235,15 @@ class PixelTransformer(nn.Module):
         self,
         h: int = 30,
         w: int = 30,
-        pos_encoding="2D",
-        embedding="conv",
-        embedding_scaling=1,
+        pos_encoding: str = "2D",
+        embedding: str = "conv",
+        embedding_scaling: int = 1,
+        max_input_otput_pairs: int = 4,
     ):
         super().__init__()
         self.embedding_scaling = int(embedding_scaling)
         self.d_model = 80 * self.embedding_scaling
+        self.max_input_otput_pairs = max_input_otput_pairs
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
@@ -281,7 +284,9 @@ class PixelTransformer(nn.Module):
             encoder_layer, num_encoder_layers, enable_nested_tensor=False
         )
 
-        self.linear = Linear(3 * self.d_model, self.d_model)
+        self.linear = Linear(
+            (self.max_input_otput_pairs - 1) * self.d_model, self.d_model
+        )
 
         decoder_layer = TransformerDecoderLayer(
             self.d_model, num_decoder_heads, dim_feedforward, norm_first=True
@@ -309,7 +314,7 @@ class PixelTransformer(nn.Module):
             if p.dim() > 1:
                 xavier_uniform_(p)
 
-    def forward(self, src, tgt):
+    def forward(self, src: Tensor, tgt: Tensor):
         """
         Args:
             src: Tensor with shape [B, N_examples * 2, C, H, W]
@@ -355,6 +360,25 @@ class PixelTransformer(nn.Module):
                 total_memory = torch.concatenate(
                     (total_memory, memory), dim=2
                 )  # dim 2 is the embedding dimension
+
+        num_missing_samples = (self.max_input_otput_pairs - 1) - s // 2
+
+        assert total_memory is not None
+
+        if num_missing_samples > 0:
+            # Repeat some context vectors
+            samples_to_repeat = random.choices(
+                range(n_train_examples), k=num_missing_samples
+            )
+
+            for i in samples_to_repeat:
+                total_memory = torch.concatenate(
+                    (
+                        total_memory,
+                        total_memory[:, :, i * self.d_model : (i + 1) * self.d_model],
+                    ),
+                    dim=2,
+                )
 
         tgt = tgt.permute(3, 2, 0, 1).contiguous().view(h * w, b, self.d_model)
 

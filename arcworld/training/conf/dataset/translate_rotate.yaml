@@ -4,3 +4,4 @@ eval_paths:
   - /path/to/your/evaluation/dataset2
 h_bound: 30
 w_bound: 30
+max_input_otput_pairs: 8

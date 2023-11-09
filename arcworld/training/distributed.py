@@ -57,7 +57,10 @@ def main(cfg: DictConfig):
 
     # Create the datasets.
     train_dataset = TransformerOriginalDataset(
-        cfg.dataset.train_path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+        cfg.dataset.train_path,
+        h_bound=cfg.dataset.h_bound,
+        w_bound=cfg.dataset.w_bound,
+        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
     )
 
     # Create the Distributed Samplers
@@ -77,7 +80,10 @@ def main(cfg: DictConfig):
     eval_dataloaders: List[DataLoader[ARC_TENSOR]] = []
     for path in cfg.dataset.eval_paths:
         eval_dataset = TransformerOriginalDataset(
-            path, h_bound=cfg.dataset.h_bound, w_bound=cfg.dataset.w_bound
+            path,
+            h_bound=cfg.dataset.h_bound,
+            w_bound=cfg.dataset.w_bound,
+            max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
         )
         eval_sampler = DistributedSampler(
             dataset=eval_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
@@ -91,7 +97,11 @@ def main(cfg: DictConfig):
         eval_dataloaders.append(eval_dataloader)
 
     partial_model = instantiate(cfg.model)
-    model = partial_model(h=cfg.dataset.h_bound, w=cfg.dataset.w_bound).to(device)
+    model = partial_model(
+        h=cfg.dataset.h_bound,
+        w=cfg.dataset.w_bound,
+        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+    ).to(device)
     model_ddp = DistributedDataParallel(model, device_ids=[RANK], output_device=RANK)
     model_ddp.train()
 
