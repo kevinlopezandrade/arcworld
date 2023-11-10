@@ -154,7 +154,7 @@ class TransformerOriginalDataset(Dataset[ARC_TENSOR]):
             data,
             h=self.h_bound,
             w=self.w_bound,
-            max_input_otput_pairs=self.max_input_otput_pairs,
+            max_input_otput_pairs=len(data),
         )
 
         X = torch.Tensor(encode_task(task[:-1]))  # noqa
