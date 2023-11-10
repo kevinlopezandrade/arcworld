@@ -31,7 +31,7 @@ class ArcPercentageOfPerfectlySolvedTasks(Metric):
 
         for pred, grid in zip(preds, target):
             difference = pred - grid
-            if difference.count_nonzero() == 0:
+            if not difference.is_nonzero():
                 self.n_perfectly_solved += 1
 
         self.total += preds.shape[0]
