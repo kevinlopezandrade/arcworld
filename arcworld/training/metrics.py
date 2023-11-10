@@ -37,7 +37,7 @@ class ArcPercentageOfPerfectlySolvedTasks(Metric):
         self.total += preds.shape[0]
 
     def compute(self):
-        return self.n_perfectly_solved.float() / self.total
+        return (self.n_perfectly_solved.float() / self.total) * 100
 
 
 class ArcPixelDifference(Metric):
