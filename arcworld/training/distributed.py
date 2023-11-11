@@ -116,7 +116,7 @@ def main(cfg: DictConfig):
     metrics = [
         Accuracy(task="multiclass", num_classes=11).to(device),
         ArcPixelDifference().to(device),
-        ArcPercentageOfPerfectlySolvedTasks.to(device),
+        ArcPercentageOfPerfectlySolvedTasks().to(device),
     ]
 
     for epoch in tqdm(range(1, cfg.epochs + 1), desc="Training"):

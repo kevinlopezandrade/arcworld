@@ -30,8 +30,8 @@ class ArcPercentageOfPerfectlySolvedTasks(Metric):
         preds = torch.argmax(F.softmax(preds, dim=1), dim=1)
 
         for pred, grid in zip(preds, target):
-            difference = pred - grid
-            if not difference.is_nonzero():
+            difference = (pred - grid).sum().item()
+            if difference == 0:
                 self.n_perfectly_solved += 1
 
         self.total += preds.shape[0]
