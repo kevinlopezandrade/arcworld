@@ -11,11 +11,9 @@ from torch.utils.data import DataLoader
 from torchmetrics.classification import Accuracy
 from tqdm import tqdm
 
-from arcworld.training.dataloader import ARC_TENSOR, TransformerOriginalDataset
-from arcworld.training.metrics import (
-    ArcPercentageOfPerfectlySolvedTasks,
-    ArcPixelDifference,
-)
+from arcworld.training.dataloader import ARC_TENSOR, ARCDataset
+from arcworld.training.metrics import ArcPixelDifference
+from arcworld.training.sampler import ARCBatchSampler
 from arcworld.training.trainer import evaluate, train
 
 
@@ -37,35 +35,32 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     device = torch.device(cfg.device)
-    train_dataset = TransformerOriginalDataset(
+    train_dataset = ARCDataset(
         cfg.dataset.train_path,
         h_bound=cfg.dataset.h_bound,
         w_bound=cfg.dataset.w_bound,
         max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
     )
 
-    train_dataloader = DataLoader(
-        train_dataset,
-        batch_size=cfg.bs,
-        shuffle=True,
-        num_workers=0,
+    batch_sampler = ARCBatchSampler(
+        train_dataset, max_batch_size=cfg.bs, shuffle=True, drop_last=False
     )
+    train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 
     # NOTE: Datasets are still small in scale, so we construct all of them
     # and store them in memory. For bigger loads we need to rethink this.
     eval_dataloaders: List[DataLoader[ARC_TENSOR]] = []
     for path in cfg.dataset.eval_paths:
-        eval_dataloader = DataLoader(
-            TransformerOriginalDataset(
-                path,
-                h_bound=cfg.dataset.h_bound,
-                w_bound=cfg.dataset.w_bound,
-                max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
-            ),
-            batch_size=cfg.bs,
-            shuffle=True,
-            num_workers=0,
+        eval_dataset = ARCDataset(
+            path,
+            h_bound=cfg.dataset.h_bound,
+            w_bound=cfg.dataset.w_bound,
+            max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
         )
+        batch_sampler = ARCBatchSampler(
+            eval_dataset, max_batch_size=cfg.bs, shuffle=True, drop_last=False
+        )
+        eval_dataloader = DataLoader(eval_dataset, batch_sampler=batch_sampler)
         eval_dataloaders.append(eval_dataloader)
 
     partial_model = instantiate(cfg.model)
@@ -84,7 +79,6 @@ def main(cfg: DictConfig):
     metrics = [
         Accuracy(task="multiclass", num_classes=11).to(device),
         ArcPixelDifference().to(device),
-        ArcPercentageOfPerfectlySolvedTasks().to(device),
     ]
     for epoch in tqdm(range(cfg.epochs), desc="Training"):
         train(model, optimizer, loss_fn, train_dataloader, device)

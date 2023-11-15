@@ -99,7 +99,7 @@ def encode_task(normalized_task: NDArray[np.uint8]) -> NDArray[np.uint8]:
     return X
 
 
-class TransformerOriginalDataset(Dataset[ARC_TENSOR]):
+class ARCDataset(Dataset[ARC_TENSOR]):
     def __init__(
         self,
         path: str,

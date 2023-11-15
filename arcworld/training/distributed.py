@@ -14,11 +14,8 @@ from torch.utils.data.distributed import DistributedSampler
 from torchmetrics.classification import Accuracy
 from tqdm import tqdm
 
-from arcworld.training.dataloader import ARC_TENSOR, TransformerOriginalDataset
-from arcworld.training.metrics import (
-    ArcPercentageOfPerfectlySolvedTasks,
-    ArcPixelDifference,
-)
+from arcworld.training.dataloader import ARC_TENSOR, ARCDataset
+from arcworld.training.metrics import ArcPixelDifference
 from arcworld.training.trainer import evaluate, train
 from arcworld.training.utils import main_torch_distributed
 
@@ -59,7 +56,7 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     # Create the datasets.
-    train_dataset = TransformerOriginalDataset(
+    train_dataset = ARCDataset(
         cfg.dataset.train_path,
         h_bound=cfg.dataset.h_bound,
         w_bound=cfg.dataset.w_bound,
@@ -82,7 +79,7 @@ def main(cfg: DictConfig):
     # and store them in memory. For bigger loads we need to rethink this.
     eval_dataloaders: List[DataLoader[ARC_TENSOR]] = []
     for path in cfg.dataset.eval_paths:
-        eval_dataset = TransformerOriginalDataset(
+        eval_dataset = ARCDataset(
             path,
             h_bound=cfg.dataset.h_bound,
             w_bound=cfg.dataset.w_bound,
@@ -116,7 +113,6 @@ def main(cfg: DictConfig):
     metrics = [
         Accuracy(task="multiclass", num_classes=11).to(device),
         ArcPixelDifference().to(device),
-        ArcPercentageOfPerfectlySolvedTasks().to(device),
     ]
 
     for epoch in tqdm(range(1, cfg.epochs + 1), desc="Training"):
