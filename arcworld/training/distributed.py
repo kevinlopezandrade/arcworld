@@ -10,12 +10,12 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf, open_dict
 from torch.nn.parallel.distributed import DistributedDataParallel
 from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
 from torchmetrics.classification import Accuracy
 from tqdm import tqdm
 
 from arcworld.training.dataloader import ARC_TENSOR, ARCDataset
 from arcworld.training.metrics import ArcPixelDifference
+from arcworld.training.sampler import ARCDistributedBatchSampler
 from arcworld.training.trainer import evaluate, train
 from arcworld.training.utils import main_torch_distributed
 
@@ -64,16 +64,17 @@ def main(cfg: DictConfig):
     )
 
     # Create the Distributed Samplers
-    train_sampler = DistributedSampler(
-        dataset=train_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
+    train_sampler = ARCDistributedBatchSampler(
+        dataset=train_dataset,
+        num_replicas=WORLD_SIZE,
+        rank=RANK,
+        max_batch_size=cfg.bs,
+        shuffle=True,
+        drop_last=False,
     )
 
     # Create the DataLoaders
-    train_dataloader = DataLoader(
-        train_dataset,
-        sampler=train_sampler,
-        batch_size=cfg.bs,
-    )
+    train_dataloader = DataLoader(train_dataset, batch_sampler=train_sampler)
 
     # NOTE: Datasets are still small in scale, so we construct all of them
     # and store them in memory. For bigger loads we need to rethink this.
@@ -85,13 +86,17 @@ def main(cfg: DictConfig):
             w_bound=cfg.dataset.w_bound,
             max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
         )
-        eval_sampler = DistributedSampler(
-            dataset=eval_dataset, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True
+        eval_sampler = ARCDistributedBatchSampler(
+            dataset=eval_dataset,
+            num_replicas=WORLD_SIZE,
+            rank=RANK,
+            max_batch_size=cfg.bs,
+            shuffle=True,
+            drop_last=False,
         )
         eval_dataloader = DataLoader(
             eval_dataset,
-            sampler=eval_sampler,
-            batch_size=cfg.bs,
+            batch_sampler=eval_sampler,
         )
 
         eval_dataloaders.append(eval_dataloader)
@@ -120,7 +125,7 @@ def main(cfg: DictConfig):
         train(model_ddp, optimizer, loss_fn, train_dataloader, device, RANK)
 
         for eval_dataloader in eval_dataloaders:
-            eval_dataloader.sampler.set_epoch(epoch)
+            eval_dataloader.batch_sampler.set_epoch(epoch)
             evaluate(model_ddp, metrics, eval_dataloader, device, RANK)
 
         if epoch % 5 == 0:

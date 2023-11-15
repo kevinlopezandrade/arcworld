@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, cast
 
 import numpy as np
 import torch
@@ -50,6 +50,15 @@ def evaluate(
         device: Device used to store the tensors.
     """
     dataset_id = getattr(dataloader.dataset, "id", None)
+    num_batches = len(dataloader)
+
+    # If in distributed setting synchronize the minimum number of batches,
+    # to avoid halting indefinitely.
+    if rank is not None:
+        output = [None for _ in range(dist.get_world_size())]
+        num_batches = len(dataloader)
+        dist.all_gather_object(output, num_batches)
+        num_batches: int = min(cast(List[int], output))
 
     if dataset_id:
         suffix = f" - {dataset_id}"
@@ -58,7 +67,10 @@ def evaluate(
 
     model.eval()
     with torch.no_grad():
-        for seq, inp_test, out_test in dataloader:
+        for i, (seq, inp_test, out_test) in enumerate(dataloader):
+            if i == num_batches - 1:
+                break
+
             seq = seq.to(device)
             inp_test = inp_test.to(device)
             out_test = out_test.to(device)
@@ -127,12 +139,24 @@ def train(
             a distributed setting.
     """
     epoch_loss = 0.0
+    num_batches = len(dataloader)
 
-    for (
+    # If in distributed setting synchronize the minimum number of batches,
+    # to avoid halting indefinitely.
+    if rank is not None:
+        output = [None for _ in range(dist.get_world_size())]
+        num_batches = len(dataloader)
+        dist.all_gather_object(output, num_batches)
+        num_batches: int = min(cast(List[int], output))
+
+    for i, (
         seq,
         inp_test,
         out_test,
-    ) in dataloader:
+    ) in enumerate(dataloader):
+        if i == num_batches - 1:
+            break
+
         optimizer.zero_grad()
 
         seq = seq.to(device)
