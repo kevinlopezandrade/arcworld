@@ -121,7 +121,7 @@ class ARCDataset(Dataset[ARC_TENSOR]):
         self.w_bound = w_bound
         self.max_input_otput_pairs = max_input_otput_pairs
 
-        self._id = os.path.basename(os.path.normpath(self.path))
+        self._id = os.path.normpath(self.path)
 
     @property
     def id(self) -> str:
