@@ -14,7 +14,10 @@ from torchmetrics.classification import Accuracy
 from tqdm import tqdm
 
 from arcworld.training.dataloader import ARC_TENSOR, ARCDataset
-from arcworld.training.metrics import ArcPixelDifference
+from arcworld.training.metrics import (
+    ArcPercentageOfPerfectlySolvedTasks,
+    ArcPixelDifference,
+)
 from arcworld.training.sampler import ARCDistributedBatchSampler
 from arcworld.training.trainer import evaluate, train
 from arcworld.training.utils import main_torch_distributed
@@ -118,6 +121,7 @@ def main(cfg: DictConfig):
     metrics = [
         Accuracy(task="multiclass", num_classes=11).to(device),
         ArcPixelDifference().to(device),
+        ArcPercentageOfPerfectlySolvedTasks().to(device),
     ]
 
     for epoch in tqdm(range(1, cfg.epochs + 1), desc="Training"):
