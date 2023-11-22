@@ -20,7 +20,39 @@ from arcworld.training.metrics import (
 )
 from arcworld.training.sampler import ARCDistributedBatchSampler
 from arcworld.training.trainer import evaluate, train
-from arcworld.training.utils import main_torch_distributed
+from arcworld.training.utils import find_last_model, main_torch_distributed
+
+
+def create_model(cfg: DictConfig, device: torch.device) -> DistributedDataParallel:
+    partial_model = instantiate(cfg.model)
+    model = partial_model(
+        h=cfg.dataset.h_bound,
+        w=cfg.dataset.w_bound,
+        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+    ).to(device)
+
+    model_ddp = DistributedDataParallel(
+        model, device_ids=[cfg.rank], output_device=cfg.rank
+    )
+
+    if cfg.get("checkpoint", None):
+        state_path = find_last_model(cfg.checkpoint)
+        state = torch.load(state_path, map_location=device)
+        model_ddp.load_state_dict(state["model_state_dict"])
+
+    return model_ddp
+
+
+def create_optimizer(cfg: DictConfig, model_ddp: DistributedDataParallel):
+    params = [p for p in model_ddp.parameters() if p.requires_grad]
+    optimizer = torch.optim.AdamW(params, lr=cfg.optim.lr)
+
+    if cfg.get("checkpoint", None):
+        state_path = find_last_model(cfg.checkpoint)
+        state = torch.load(state_path)
+        optimizer.load_state_dict(state["optimizer_state_dict"])
+
+    return optimizer
 
 
 @main_torch_distributed(config_path="conf", config_name="config")
@@ -104,17 +136,10 @@ def main(cfg: DictConfig):
 
         eval_dataloaders.append(eval_dataloader)
 
-    partial_model = instantiate(cfg.model)
-    model = partial_model(
-        h=cfg.dataset.h_bound,
-        w=cfg.dataset.w_bound,
-        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
-    ).to(device)
-    model_ddp = DistributedDataParallel(model, device_ids=[RANK], output_device=RANK)
+    model_ddp = create_model(cfg, device)
     model_ddp.train()
 
-    params = [p for p in model_ddp.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(params, lr=cfg.optim.lr)
+    optimizer = create_optimizer(cfg, model_ddp)
     loss_fn = nn.CrossEntropyLoss(
         weight=torch.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.1], device=device)
     )

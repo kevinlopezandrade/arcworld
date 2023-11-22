@@ -1,4 +1,6 @@
 import functools
+import os
+import shutil
 from datetime import datetime, timedelta
 from typing import Any, Callable, Optional
 
@@ -30,13 +32,6 @@ def main_torch_distributed(
             the .yaml extension)
     """
     version.setbase(None)
-    mandatory_cli_args = OmegaConf.create(
-        {
-            "rank": "???",
-            "world_size": "???",
-            "output_dir": "./outputs_distributed/${%Y-%m-%d}/${%H-%M-%S}",
-        }
-    )
 
     def main_decorator(task_function: TaskFunction) -> Callable[[], None]:
         @functools.wraps(task_function)
@@ -45,10 +40,26 @@ def main_torch_distributed(
             args = args_parser.parse_args()
 
             cli_args = OmegaConf.from_dotlist(args.overrides)
-            cli_args = OmegaConf.merge(mandatory_cli_args, cli_args)
+            rank = OmegaConf.select(cli_args, "rank")
+            world_size = OmegaConf.select(cli_args, "world_size")
 
-            rank = OmegaConf.select(cli_args, "rank", throw_on_missing=True)
-            world_size = OmegaConf.select(cli_args, "world_size", throw_on_missing=True)
+            if rank is None or world_size is None:
+                raise ValueError(
+                    "In distributed mode rank and world_size" " are required"
+                )
+
+            checkpoint = OmegaConf.select(cli_args, "checkpoint")
+
+            # Rewrite for hydra not complaining.
+            for i, arg in enumerate(args.overrides):
+                if arg.startswith("rank="):
+                    args.overrides[i] = f"+{arg}"
+                if arg.startswith("world_size="):
+                    args.overrides[i] = f"+{arg}"
+                if arg.startswith("checkpoint="):
+                    args.overrides[i] = f"+{arg}"
+                if arg.startswith("dataset="):
+                    args.overrides[i] = f"+{arg}"
 
             # Start the TCPStore server and distribute the output directory.
             if rank == 0:
@@ -77,22 +88,87 @@ def main_torch_distributed(
                     + f"{now.strftime('%H-%M-%S')}"
                 )
                 store.set("output_dir", output_dir)
+
+                if checkpoint:
+                    prev_config_path = os.path.join(checkpoint, "rank_0", ".hydra")
+                    prev_config_name = "config.yaml"
+                    prev_dict = OmegaConf.load(
+                        os.path.join(prev_config_path, prev_config_name)
+                    )
+
+                    # Clone the conf directory into the sub_conf inside the
+                    # checkpointed directory.
+                    sub_conf_path = os.path.join(prev_config_path, "sub_conf")
+                    os.makedirs(sub_conf_path, exist_ok=True)
+
+                    assert config_path is not None
+                    shutil.copytree(config_path, sub_conf_path, dirs_exist_ok=True)
+
+                    sub_conf_name = "config.yaml"
+                    with open(os.path.join(sub_conf_path, sub_conf_name), "w") as f:
+                        OmegaConf.save(config=prev_dict, f=f)
+
+                    store.set("sub_conf_path", sub_conf_path)
+                    store.set("sub_conf_name", sub_conf_name)
             else:
                 store.wait(["output_dir"])
                 output_dir = store.get("output_dir").decode()
+
+                if checkpoint:
+                    store.wait(["sub_conf_path"])
+                    sub_conf_path = store.get("sub_conf_path").decode()
+                    store.wait(["sub_conf_name"])
+                    sub_conf_name = store.get("sub_conf_name").decode()
 
             args.overrides = args.overrides + [
                 f"hydra.run.dir={output_dir}/rank_{rank}"
             ]
 
-            _run_hydra(
-                args=args,
-                args_parser=args_parser,
-                task_function=task_function,
-                config_path=config_path,
-                config_name=config_name,
-            )
+            if checkpoint:
+                print("Running from the previous checkpoint")
+                # To avoid hydra complaining
+                for i, arg in enumerate(args.overrides):
+                    if arg.startswith("+rank="):
+                        args.overrides[i] = f"+{arg}"
+                    if arg.startswith("+world_size="):
+                        args.overrides[i] = f"+{arg}"
+
+                # In case I'm starting from another checkpoint
+                prev_dict = OmegaConf.load(os.path.join(sub_conf_path, sub_conf_name))
+                if OmegaConf.select(prev_dict, "checkpoint"):
+                    for i, arg in enumerate(args.overrides):
+                        if arg.startswith("+checkpoint="):
+                            args.overrides[i] = f"+{arg}"
+
+                _run_hydra(
+                    args=args,
+                    args_parser=args_parser,
+                    task_function=task_function,
+                    config_path=sub_conf_path,
+                    config_name=sub_conf_name,
+                )
+
+            else:
+                _run_hydra(
+                    args=args,
+                    args_parser=args_parser,
+                    task_function=task_function,
+                    config_path=config_path,
+                    config_name=config_name,
+                )
 
         return decorated_main
 
     return main_decorator
+
+
+def find_last_model(checkpoint_path: str) -> str:
+    """
+    In the directory where the weights have been saved per epoch returns the
+    path to the model which was saved at the maximum epoch.
+    """
+    master_path = os.path.join(checkpoint_path, "rank_0")
+    models = [file for file in os.listdir(master_path) if file.startswith("model")]
+    models = [model.split(".")[0].split("_")[-1] for model in models]
+
+    return os.path.join(checkpoint_path, "rank_0", f"model_epoch_{max(models)}.pt")

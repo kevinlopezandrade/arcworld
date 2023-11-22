@@ -11,5 +11,3 @@ bs: 4
 device: cuda
 wandb_notes: ???
 wandb_run_name: ???
-rank: ??? # DON'T CHANGE THIS: use always the command line arguments.
-world_size: ??? # DON'T CHANGE THIS: use always the command line arguments.
