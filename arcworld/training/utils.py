@@ -1,9 +1,11 @@
 import functools
 import os
 import shutil
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from typing import Any, Callable, Optional
 
+import torch
 import torch.distributed as dist
 from hydra import version
 from hydra._internal.utils import _run_hydra, get_args_parser
@@ -125,7 +127,6 @@ def main_torch_distributed(
             ]
 
             if checkpoint:
-                print("Running from the previous checkpoint")
                 # To avoid hydra complaining
                 for i, arg in enumerate(args.overrides):
                     if arg.startswith("+rank="):
@@ -160,6 +161,22 @@ def main_torch_distributed(
         return decorated_main
 
     return main_decorator
+
+
+def is_from_ddp(model_state_dict: OrderedDict[str, torch.Tensor]) -> bool:
+    return all(key.split(".")[0] == "module" for key in model_state_dict.keys())
+
+
+def remap_ddp(
+    model_state_dict: OrderedDict[str, torch.Tensor]
+) -> OrderedDict[str, torch.Tensor]:
+    new_model_state_dict: OrderedDict[str, torch.Tensor] = OrderedDict()
+
+    for key in model_state_dict.keys():
+        new_key = ".".join(key.split(".")[1:])
+        new_model_state_dict[new_key] = model_state_dict[key]
+
+    return new_model_state_dict
 
 
 def find_last_model(checkpoint_path: str) -> str:

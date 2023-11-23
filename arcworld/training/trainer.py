@@ -8,9 +8,9 @@ import wandb
 from numpy.typing import NDArray
 from torch import FloatTensor, Tensor, nn
 from torch.optim import Optimizer
-from torch.types import Device
 from torch.utils.data import DataLoader
 from torchmetrics import Metric
+from tqdm import tqdm
 from wandb.errors import Error as WandbError
 
 from arcworld.internal.constants import Example, Task
@@ -37,7 +37,7 @@ def evaluate(
     model: nn.Module,
     metrics: List[Metric],
     dataloader: DataLoader[Tuple[Tensor, Tensor, Tensor]],
-    device: Device,
+    device: torch.device,
     rank: Optional[int] = None,
 ):
     """
@@ -67,7 +67,9 @@ def evaluate(
 
     model.eval()
     with torch.no_grad():
-        for i, (seq, inp_test, out_test) in enumerate(dataloader):
+        for i, (seq, inp_test, out_test) in tqdm(
+            enumerate(dataloader), total=num_batches, desc="Eval Batch", leave=False
+        ):
             if i == num_batches - 1:
                 break
 
@@ -123,7 +125,7 @@ def train(
     optimizer: Optimizer,
     loss_fn: nn.Module,
     dataloader: DataLoader[Tuple[Tensor, Tensor, Tensor]],
-    device: Device,
+    device: torch.device,
     rank: Optional[int] = None,
 ) -> float:
     """
@@ -138,7 +140,7 @@ def train(
         rank: If rank is different to None, then it means we are in
             a distributed setting.
     """
-    epoch_loss = 0.0
+    epoch_loss = torch.tensor([0.0]).to(device)
     num_batches = len(dataloader)
 
     # If in distributed setting synchronize the minimum number of batches,
@@ -153,7 +155,9 @@ def train(
         seq,
         inp_test,
         out_test,
-    ) in enumerate(dataloader):
+    ) in tqdm(
+        enumerate(dataloader), total=num_batches, leave=False, desc="Train Batch"
+    ):
         if i == num_batches - 1:
             break
 

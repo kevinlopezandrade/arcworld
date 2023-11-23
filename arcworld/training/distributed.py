@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List
 
@@ -9,6 +10,7 @@ import wandb
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf, open_dict
 from torch.nn.parallel.distributed import DistributedDataParallel
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torchmetrics.classification import Accuracy
 from tqdm import tqdm
@@ -20,7 +22,14 @@ from arcworld.training.metrics import (
 )
 from arcworld.training.sampler import ARCDistributedBatchSampler
 from arcworld.training.trainer import evaluate, train
-from arcworld.training.utils import find_last_model, main_torch_distributed
+from arcworld.training.utils import (
+    find_last_model,
+    is_from_ddp,
+    main_torch_distributed,
+    remap_ddp,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def create_model(cfg: DictConfig, device: torch.device) -> DistributedDataParallel:
@@ -29,28 +38,34 @@ def create_model(cfg: DictConfig, device: torch.device) -> DistributedDataParall
         h=cfg.dataset.h_bound,
         w=cfg.dataset.w_bound,
         max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
-    ).to(device)
-
-    model_ddp = DistributedDataParallel(
-        model, device_ids=[cfg.rank], output_device=cfg.rank
     )
 
     if cfg.get("checkpoint", None):
         state_path = find_last_model(cfg.checkpoint)
-        state = torch.load(state_path, map_location=device)
-        model_ddp.load_state_dict(state["model_state_dict"])
+        state = torch.load(state_path, map_location="cpu")
+        model_state = state["model_state_dict"]
+        if is_from_ddp(model_state):
+            model_state = remap_ddp(model_state)
+        model.load_state_dict(model_state)
+        logger.info(f"Using weights from {state_path}")
+
+    model.to(device)
+    model_ddp = DistributedDataParallel(
+        model, device_ids=[cfg.rank], output_device=cfg.rank
+    )
 
     return model_ddp
 
 
-def create_optimizer(cfg: DictConfig, model_ddp: DistributedDataParallel):
+def create_optimizer(cfg: DictConfig, model_ddp: DistributedDataParallel) -> Optimizer:
     params = [p for p in model_ddp.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(params, lr=cfg.optim.lr)
 
     if cfg.get("checkpoint", None):
         state_path = find_last_model(cfg.checkpoint)
-        state = torch.load(state_path)
+        state = torch.load(state_path, map_location="cpu")
         optimizer.load_state_dict(state["optimizer_state_dict"])
+        logger.info(f"Using optimizer state from {state_path}")
 
     return optimizer
 
@@ -87,10 +102,11 @@ def main(cfg: DictConfig):
             config=OmegaConf.to_container(cfg, resolve=True),
         )
 
-    print(f"PID: {os.getpid()}")
-    print(OmegaConf.to_yaml(cfg))
+    logger.info(f"PID: {os.getpid()}")
+    logger.info(f"Running experiment with config\n{OmegaConf.to_yaml(cfg)}")
 
     # Create the datasets.
+    logger.info("Loading datasets")
     train_dataset = ARCDataset(
         cfg.dataset.train_path,
         h_bound=cfg.dataset.h_bound,
@@ -136,6 +152,7 @@ def main(cfg: DictConfig):
 
         eval_dataloaders.append(eval_dataloader)
 
+    logger.info("Creating the model")
     model_ddp = create_model(cfg, device)
     model_ddp.train()
 
@@ -149,12 +166,13 @@ def main(cfg: DictConfig):
         ArcPercentageOfPerfectlySolvedTasks().to(device),
     ]
 
+    logger.info("Starting training")
     for epoch in tqdm(range(1, cfg.epochs + 1), desc="Training"):
         train_sampler.set_epoch(epoch)
         train(model_ddp, optimizer, loss_fn, train_dataloader, device, RANK)
 
         for eval_dataloader in eval_dataloaders:
-            eval_dataloader.batch_sampler.set_epoch(epoch)
+            eval_dataloader.batch_sampler.set_epoch(epoch)  # type: ignore
             evaluate(model_ddp, metrics, eval_dataloader, device, RANK)
 
         if epoch % 5 == 0:
@@ -163,10 +181,11 @@ def main(cfg: DictConfig):
                 checkpoint_path = os.path.join(
                     hydra_cfg.runtime.output_dir, f"model_epoch_{epoch}.pt"
                 )
+                model_state_dict = model_ddp.module.state_dict()  # type: ignore
                 torch.save(
                     {
                         "epoch": epoch,
-                        "model_state_dict": model_ddp.state_dict(),
+                        "model_state_dict": model_state_dict,  # type: ignore
                         "optimizer_state_dict": optimizer.state_dict(),
                     },
                     checkpoint_path,

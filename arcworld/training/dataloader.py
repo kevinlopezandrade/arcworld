@@ -1,5 +1,7 @@
+import logging
 import os
 import random
+import string
 from typing import List, Tuple
 
 import numpy as np
@@ -8,10 +10,13 @@ import torch.nn.functional as F  # noqa
 from numpy.typing import NDArray
 from torch import Tensor
 from torch.utils.data import Dataset
+from tqdm import tqdm, trange
 
-from arcworld.internal.constants import Task
+from arcworld.internal.constants import Example, Task
 from arcworld.storage.fingerprint import normalize_task
 from arcworld.utils import decode_json_task
+
+logger = logging.getLogger(__name__)
 
 ARC_TENSOR = Tuple[Tensor, Tensor, Tensor]
 
@@ -21,11 +26,10 @@ def _read_arc_json_files(path: str) -> List[Task]:
     Given a directory path returns a list of arc
     Tasks.
     """
-    print("Decoding tasks ...")
     files = sorted(os.listdir(path))
 
     tasks: List[Task] = []
-    for file in files:
+    for file in tqdm(files, desc="Decoding json files", leave=False):
         try:
             task = decode_json_task(os.path.join(path, file))
         except Exception as e:
@@ -33,7 +37,7 @@ def _read_arc_json_files(path: str) -> List[Task]:
         else:
             tasks.append(task)
 
-    print(f"Decoded tasks: {len(tasks)}")
+    logger.info(f"Decoded tasks: {len(tasks)}")
 
     return tasks
 
@@ -149,6 +153,72 @@ class ARCDataset(Dataset[ARC_TENSOR]):
             data = random.sample(data[:-1], k=self.max_input_otput_pairs - 1) + [
                 data[-1]
             ]
+
+        task = normalize_task(
+            data,
+            h=self.h_bound,
+            w=self.w_bound,
+            max_input_otput_pairs=len(data),
+        )
+
+        X = torch.Tensor(encode_task(task[:-1]))  # noqa
+        inp_test = torch.Tensor(encode_colors(task[-1, 0, :, :]))
+
+        # Output test, should not be encoded for later computing the
+        # cross entropy loss.
+        out_test = torch.LongTensor(task[-1, 1, :, :])
+
+        return X, inp_test, out_test
+
+
+class ARCDatasetTest(Dataset[ARC_TENSOR]):
+    """
+    This class is made purely for testing.
+    It should live in the 'tests' directory we have in the root project.
+    But we leave it here for convenience.
+    """
+
+    def __init__(
+        self,
+        path: str,
+        h_bound: int = 30,
+        w_bound: int = 30,
+        max_input_otput_pairs: int = 4,
+        len: int = 512,
+    ) -> None:
+        self.h_bound = h_bound
+        self.w_bound = w_bound
+        self.max_input_otput_pairs = max_input_otput_pairs
+        self.len = len
+        self._id = "".join(random.choices(string.ascii_uppercase + string.digits, k=5))
+
+        self.data = self._create_fake_data(self.len, self.max_input_otput_pairs)
+
+        logger.info(f"Using debug dataset {self._id}")
+
+    @staticmethod
+    def _create_fake_data(len: int, max_input_otput_pairs: int) -> List[Task]:
+        tasks: List[Task] = []
+        for _ in trange(len, desc="Creating tasks"):
+            task: Task = []
+            for _ in range(max_input_otput_pairs):
+                inp = np.zeros(shape=(30, 30), dtype=np.uint8)
+                out = np.zeros(shape=(30, 30), dtype=np.uint8)
+                task.append(Example(input=inp, output=out))
+
+            tasks.append(task)
+
+        return tasks
+
+    @property
+    def id(self) -> str:
+        return self._id
+
+    def __len__(self) -> int:
+        return self.len
+
+    def __getitem__(self, index: int) -> ARC_TENSOR:
+        data = self.data[index]
 
         task = normalize_task(
             data,
