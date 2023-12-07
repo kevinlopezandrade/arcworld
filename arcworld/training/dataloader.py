@@ -109,7 +109,7 @@ class ARCDataset(Dataset[ARC_TENSOR]):
         path: str,
         h_bound: int = 30,
         w_bound: int = 30,
-        max_input_otput_pairs: int = 4,
+        max_input_output_pairs: int = 4,
     ):
         """
         Args:
@@ -123,7 +123,7 @@ class ARCDataset(Dataset[ARC_TENSOR]):
         self.data = _read_arc_json_files(path)
         self.h_bound = h_bound
         self.w_bound = w_bound
-        self.max_input_otput_pairs = max_input_otput_pairs
+        self.max_input_output_pairs = max_input_output_pairs
 
         self._id = os.path.normpath(self.path)
 
@@ -148,9 +148,9 @@ class ARCDataset(Dataset[ARC_TENSOR]):
         N = len(self.data[idx])  # noqa
         data = self.data[idx]
 
-        if N > self.max_input_otput_pairs:
+        if N > self.max_input_output_pairs:
             # The last element is always the test sample.
-            data = random.sample(data[:-1], k=self.max_input_otput_pairs - 1) + [
+            data = random.sample(data[:-1], k=self.max_input_output_pairs - 1) + [
                 data[-1]
             ]
 
@@ -158,7 +158,7 @@ class ARCDataset(Dataset[ARC_TENSOR]):
             data,
             h=self.h_bound,
             w=self.w_bound,
-            max_input_otput_pairs=len(data),
+            max_input_output_pairs=len(data),
         )
 
         X = torch.Tensor(encode_task(task[:-1]))  # noqa
@@ -224,7 +224,7 @@ class ARCDatasetTest(Dataset[ARC_TENSOR]):
             data,
             h=self.h_bound,
             w=self.w_bound,
-            max_input_otput_pairs=len(data),
+            max_input_output_pairs=len(data),
         )
 
         X = torch.Tensor(encode_task(task[:-1]))  # noqa

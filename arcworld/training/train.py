@@ -42,7 +42,7 @@ def main(cfg: DictConfig):
         cfg.dataset.train_path,
         h_bound=cfg.dataset.h_bound,
         w_bound=cfg.dataset.w_bound,
-        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+        max_input_output_pairs=cfg.dataset.max_input_output_pairs,
     )
 
     batch_sampler = ARCBatchSampler(
@@ -58,7 +58,7 @@ def main(cfg: DictConfig):
             path,
             h_bound=cfg.dataset.h_bound,
             w_bound=cfg.dataset.w_bound,
-            max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+            max_input_output_pairs=cfg.dataset.max_input_output_pairs,
         )
         batch_sampler = ARCBatchSampler(
             eval_dataset, max_batch_size=cfg.bs, shuffle=True, drop_last=False
@@ -70,7 +70,7 @@ def main(cfg: DictConfig):
     model = partial_model(
         h=cfg.dataset.h_bound,
         w=cfg.dataset.w_bound,
-        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+        max_input_output_pairs=cfg.dataset.max_input_output_pairs,
     ).to(device)
     model.train()
 

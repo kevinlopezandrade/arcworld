@@ -37,7 +37,7 @@ def create_model(cfg: DictConfig, device: torch.device) -> DistributedDataParall
     model = partial_model(
         h=cfg.dataset.h_bound,
         w=cfg.dataset.w_bound,
-        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+        max_input_output_pairs=cfg.dataset.max_input_output_pairs,
     )
 
     if cfg.get("checkpoint", None):
@@ -111,7 +111,7 @@ def main(cfg: DictConfig):
         cfg.dataset.train_path,
         h_bound=cfg.dataset.h_bound,
         w_bound=cfg.dataset.w_bound,
-        max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+        max_input_output_pairs=cfg.dataset.max_input_output_pairs,
     )
 
     # Create the Distributed Samplers
@@ -135,7 +135,7 @@ def main(cfg: DictConfig):
             path,
             h_bound=cfg.dataset.h_bound,
             w_bound=cfg.dataset.w_bound,
-            max_input_otput_pairs=cfg.dataset.max_input_otput_pairs,
+            max_input_output_pairs=cfg.dataset.max_input_output_pairs,
         )
         eval_sampler = ARCDistributedBatchSampler(
             dataset=eval_dataset,

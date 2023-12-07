@@ -36,7 +36,7 @@ def hash_task(task: Task) -> str:
 
 
 def normalize_task(
-    task: Task, h: int = 30, w: int = 30, max_input_otput_pairs: int = 4
+    task: Task, h: int = 30, w: int = 30, max_input_output_pairs: int = 4
 ) -> NDArray[np.uint8]:
     """
     Given a task normalize the task examples so that all of them are placed
@@ -50,7 +50,7 @@ def normalize_task(
         w: Width of the normalized grid
         max_input_otput_pairs: Maximum input output pairs of the normalized task.
     """
-    MAX_PAIRS = max_input_otput_pairs  # noqa
+    MAX_PAIRS = max_input_output_pairs  # noqa
 
     N = len(task)  # noqa
 

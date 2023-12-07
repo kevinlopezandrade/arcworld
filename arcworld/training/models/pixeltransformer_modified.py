@@ -29,12 +29,12 @@ class PixelTransformerModified(nn.Module):
         pos_encoding: str = "2D",
         embedding: str = "conv",
         embedding_scaling: int = 1,
-        max_input_otput_pairs: int = 4,
+        max_input_output_pairs: int = 4,
     ):
         super().__init__()
         self.embedding_scaling = int(embedding_scaling)
         self.d_model = 80 * self.embedding_scaling
-        self.max_input_otput_pairs = max_input_otput_pairs
+        self.max_input_output_pairs = max_input_output_pairs
         num_encoder_heads = 4
         num_decoder_heads = 4
         num_encoder_layers = 8
@@ -76,7 +76,7 @@ class PixelTransformerModified(nn.Module):
         )
 
         self.linear = Linear(
-            (self.max_input_otput_pairs - 1) * self.d_model, self.d_model
+            (self.max_input_output_pairs - 1) * self.d_model, self.d_model
         )
 
         decoder_layer = TransformerDecoderLayer(
@@ -208,7 +208,7 @@ class PixelTransformerModified(nn.Module):
                     (total_memory, memory), dim=2
                 )  # dim 2 is the embedding dimension
 
-        num_missing_samples = (self.max_input_otput_pairs - 1) - s // 2
+        num_missing_samples = (self.max_input_output_pairs - 1) - s // 2
 
         assert total_memory is not None
 
