@@ -2,7 +2,7 @@ import random
 from collections import defaultdict
 from typing import Dict, Set, cast
 
-from arcworld.dsl.arc_types import Coordinate, Coordinates, Shape, Shapes
+from arcworld.dsl.arc_types import Coordinate, Coordinates, Object, Objects
 from arcworld.dsl.functional import (
     add,
     backdrop,
@@ -35,7 +35,7 @@ class LinesGrid(BSTGridBruteForce):
         directions: Set[str] | None = None,
     ) -> None:
         super().__init__(h, w, bg_color, margin, mode)
-        self._lines: Dict[Shape, Shapes] = defaultdict(frozenset)
+        self._lines: Dict[Object, Objects] = defaultdict(frozenset)
 
         if directions is not None:
             self.directions: Set[str] = directions
@@ -43,11 +43,11 @@ class LinesGrid(BSTGridBruteForce):
             self.directions: Set[str] = {"N", "S", "E", "W", "NE", "NW", "SE", "SW"}
 
     @property
-    def lines(self) -> Dict[Shape, Shapes]:
+    def lines(self) -> Dict[Object, Objects]:
         return self._lines
 
     @staticmethod
-    def _possible_lines(directions: Set[str], height: int, width: int, shape: Shape):
+    def _possible_lines(directions: Set[str], height: int, width: int, shape: Object):
         """
         For dots you have to cover both sides of a given direction.
         """
@@ -85,22 +85,22 @@ class LinesGrid(BSTGridBruteForce):
 
         return lines
 
-    def _prune_possible_lines(self, shape: Shape):
+    def _prune_possible_lines(self, shape: Object):
         self.occupied = self.occupied | LinesGrid._possible_lines(
             self.directions, self.height, self.width, shape
         )
 
     def place_shape_random(
-        self, shape: Shape, color_palette: Set[int] | None = None
-    ) -> Shape:
+        self, shape: Object, color_palette: Set[int] | None = None
+    ) -> Object:
         shifted_shape = super().place_shape_random(shape, color_palette)
         self._prune_possible_lines(shifted_shape)
 
         return shifted_shape
 
     def place_shape_on_intersection(
-        self, shape: Shape, color_palette: Set[int] | None = None
-    ) -> Shape:
+        self, shape: Object, color_palette: Set[int] | None = None
+    ) -> Object:
         # Define boundaries
         h = height(shape)
         w = width(shape)
@@ -111,7 +111,7 @@ class LinesGrid(BSTGridBruteForce):
         # The coordinates occupied by the objects
         objects = set(
             coord
-            for shp in self.shapes
+            for shp in self.objects
             for coord in toindices(bounding_box(shp, self.margin))
         )
 
@@ -131,7 +131,7 @@ class LinesGrid(BSTGridBruteForce):
 
             # Check if it overlaps with the center of mass of some
             # shape already placed in the grid.
-            for shp in self.shapes:
+            for shp in self.objects:
                 if LinesGrid._possible_lines(
                     self.directions, self.height, self.width, recolor(8, disp_bbox)
                 ) & {centerofmass(backdrop(shp))}:
@@ -146,7 +146,7 @@ class LinesGrid(BSTGridBruteForce):
         # Place the shape in a random cell
         random_cell = random.choice(list(free))
 
-        shifted_shape = cast(Shape, shift(shape, random_cell))
+        shifted_shape = cast(Object, shift(shape, random_cell))
 
         if color_palette is not None:
             c = random.choice(list(color_palette))
@@ -155,7 +155,7 @@ class LinesGrid(BSTGridBruteForce):
             c = random.choice(list(set(range(9)) - {self._bg_color}))
             shifted_shape = recolor(c, shifted_shape)
 
-        self.add_shape(shifted_shape, padding=self.margin)
+        self.add_object(shifted_shape, padding=self.margin)
         self._prune_possible_lines(shifted_shape)
 
         return shifted_shape
@@ -194,7 +194,7 @@ class ExpansionGridBuilder:
 
         return grid
 
-    def build_input_grid(self, shapes: Shapes) -> LinesGrid:
+    def build_input_grid(self, shapes: Objects) -> LinesGrid:
         grid = self._base_form()
 
         N = self.max_dots  # noqa
@@ -245,7 +245,7 @@ class IntersectionGridBuilder:
 
         return grid
 
-    def build_input_grid(self, shapes: Shapes) -> LinesGrid:
+    def build_input_grid(self, shapes: Objects) -> LinesGrid:
         grid = self._base_form()
 
         N = self.max_dots  # noqa

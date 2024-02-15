@@ -2,11 +2,11 @@ from typing import Callable
 
 from tqdm import tqdm
 
-from arcworld.dsl.arc_types import Shape, Shapes
-from arcworld.filters.objects_filter import ShapesFilter
+from arcworld.dsl.arc_types import Object, Objects
+from arcworld.filters.objects_filter import ObjectsFilter
 
 
-class FunctionalFilter(ShapesFilter):
+class FunctionalFilter(ObjectsFilter):
     def __init__(self, name: str, func: Callable[..., bool]) -> None:
         super().__init__()
         self._name = name
@@ -16,8 +16,8 @@ class FunctionalFilter(ShapesFilter):
     def name(self) -> str:
         return self._name
 
-    def filter(self, objects: Shapes, silent: bool = True) -> Shapes:
-        res: set[Shape] = set()
+    def filter(self, objects: Objects, silent: bool = True) -> Objects:
+        res: set[Object] = set()
 
         if silent:
             iterator = objects
@@ -25,7 +25,7 @@ class FunctionalFilter(ShapesFilter):
             iterator = tqdm(
                 objects,
                 desc=f"Filtering shapes with {self.name}",
-                bar_format=ShapesFilter.BAR_FORMAT,
+                bar_format=ObjectsFilter.BAR_FORMAT,
             )
 
         for shape in iterator:

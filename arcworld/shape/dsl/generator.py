@@ -5,7 +5,7 @@ from typing import Callable, List, Optional, cast
 from tqdm import tqdm
 
 from arcworld.dsl.arc_constants import FIVE
-from arcworld.dsl.arc_types import Coordinate, Coordinates, IterableContainer, Shapes
+from arcworld.dsl.arc_types import Coordinate, Coordinates, IterableContainer, Objects
 from arcworld.dsl.functional import (
     apply,
     both,
@@ -29,9 +29,9 @@ from arcworld.shape.dsl.augmentations import AUGMENTATION_OPTIONS
 logger = logging.getLogger(__name__)
 
 
-class ShapeGeneratorDSL:
+class ObjectGeneratorDSL:
     """
-    Generates shapes.
+    Generates objects.
     """
 
     DEFAULT_AUGMENTATIONS = [
@@ -163,7 +163,7 @@ class ShapeGeneratorDSL:
 
         return shape
 
-    def generate_random_shapes(self) -> Shapes:
+    def generate_random_objects(self) -> Objects:
         """
         Generates a set of random shapes all with the same color.
 
@@ -186,6 +186,6 @@ class ShapeGeneratorDSL:
         logger.info(f"Final number of shapes: {len(shapes)}")
         # TODO: Until lbin is proprerly type hinted
         # we must use cast.
-        shapes = cast(Shapes, shapes)
+        shapes = cast(Objects, shapes)
 
         return shapes

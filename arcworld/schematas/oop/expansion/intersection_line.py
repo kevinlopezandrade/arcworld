@@ -1,21 +1,21 @@
-from arcworld.dsl.arc_types import Shape
+from arcworld.dsl.arc_types import Object
 from arcworld.dsl.functional import color, outbox, paint, recolor
 from arcworld.schematas.oop.expansion.grid import LinesGrid
 
 
-def no_op(dot: Shape, line: Shape, grid: LinesGrid):
+def no_op(dot: Object, line: Object, grid: LinesGrid):
     pass
 
 
-def paint_over(dot: Shape, line: Shape, grid: LinesGrid):
+def paint_over(dot: Object, line: Object, grid: LinesGrid):
     grid.grid = paint(grid.grid, dot)
 
 
-def paint_bg(dot: Shape, line: Shape, grid: LinesGrid):
+def paint_bg(dot: Object, line: Object, grid: LinesGrid):
     grid.grid = paint(grid.grid, recolor(grid.bg_color, dot))
 
 
-def paint_outbox(dot: Shape, line: Shape, grid: LinesGrid):
+def paint_outbox(dot: Object, line: Object, grid: LinesGrid):
     grid.grid = paint(grid.grid, recolor(color(dot), outbox(dot)))
 
 

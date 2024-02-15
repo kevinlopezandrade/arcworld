@@ -2,7 +2,7 @@
 from typing import Any, Callable, cast
 
 from arcworld.dsl.arc_constants import ZERO
-from arcworld.dsl.arc_types import Coordinates, Shape
+from arcworld.dsl.arc_types import Coordinates, Object
 from arcworld.dsl.functional import (
     backdrop,
     both,
@@ -46,7 +46,7 @@ class FilterProgram(Program):
     def program(self) -> Callable[..., Any]:
         return self._program
 
-    def __call__(self, patch: Shape) -> bool:
+    def __call__(self, patch: Object) -> bool:
         return self.program(patch)
 
 
@@ -60,7 +60,7 @@ class TransformProgram(Program):
         super().__init__(name, program_str)
 
         raw_program = build_function_from_program(program_str)
-        raw_program = cast(Callable[[Shape], Shape], raw_program)
+        raw_program = cast(Callable[[Object], Object], raw_program)
 
         self._name = name
         self._program = raw_program
@@ -77,16 +77,16 @@ class TransformProgram(Program):
     def name(self) -> str:
         return self._name
 
-    def check_well_defined(self, shape: Shape) -> bool:
+    def check_well_defined(self, shape: Object) -> bool:
         return self._is_valid_program(shape)
 
-    def __call__(self, shape: Shape) -> Shape:
+    def __call__(self, shape: Object) -> Object:
         return self.program(shape)
 
     @staticmethod
     def build_is_valid_program(
-        program: Callable[[Shape], Shape], margin: int
-    ) -> Callable[[Shape], bool]:
+        program: Callable[[Object], Object], margin: int
+    ) -> Callable[[Object], bool]:
         """
         Given a program transformation returns
         a test function that checks if the transformation
@@ -103,7 +103,7 @@ class TransformProgram(Program):
 
         # Third Test
         # Hack: I need to think how to handle this case better.
-        f_outbox = cast(Callable[[Shape], Coordinates], power(outbox, margin))
+        f_outbox = cast(Callable[[Object], Coordinates], power(outbox, margin))
         f_bbox = compose(backdrop, f_outbox)
         f_indices = compose(toindices, program)
         f_diff = fork(difference, f_bbox, f_indices)

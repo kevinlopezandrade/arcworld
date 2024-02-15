@@ -1,13 +1,13 @@
 import random
 
 from arcworld.dsl.functional import normalize
-from arcworld.shape.dsl.generator import ShapeGeneratorDSL
+from arcworld.shape.dsl.generator import ObjectGeneratorDSL
 
 
 def test_no_augmentations_no_variations():
     max_pixels = random.randint(10, 100)
 
-    generator = ShapeGeneratorDSL(
+    generator = ObjectGeneratorDSL(
         max_pixels=max_pixels, max_variations=1, augmentations=[]
     )
 
@@ -22,7 +22,7 @@ def test_no_augmentations_no_variations():
 
 
 def test_normalized_shapes():
-    generator = ShapeGeneratorDSL()
+    generator = ObjectGeneratorDSL()
     shapes = generator.generate_random_proto_shapes()
 
     assert all(normalize(shape) == shape for shape in shapes)

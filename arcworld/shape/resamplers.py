@@ -3,7 +3,7 @@ import random
 from abc import ABCMeta, abstractmethod
 from typing import List, Tuple
 
-from arcworld.dsl.arc_types import Shape, Shapes
+from arcworld.dsl.arc_types import Object, Objects
 from arcworld.dsl.functional import height, size, width
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class Resampler(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def resample(self, shapes: Shapes, n_shapes_per_grid: int) -> List[Shape]:
+    def resample(self, shapes: Objects, n_shapes_per_grid: int) -> List[Object]:
         """
         Derived classes should implement this method to define
         the resampling strategies.
@@ -51,10 +51,10 @@ class OnlyShapesRepeated(Resampler):
     one shape, and creates copies of it.
     """
 
-    def resample(self, shapes: Shapes, n_shapes_per_grid: int) -> List[Shape]:
+    def resample(self, shapes: Objects, n_shapes_per_grid: int) -> List[Object]:
         selected_shape = random.choice(list(shapes))
 
-        res: List[Shape] = []
+        res: List[Object] = []
         for _ in range(n_shapes_per_grid):
             res.append(selected_shape)
 
@@ -76,7 +76,7 @@ class UniqueShapeParemeter(Resampler):
         self.param = param
         self.max_trials = max_trials
 
-    def _get_param(self, shape: Shape) -> int:
+    def _get_param(self, shape: Object) -> int:
         if self.param == "n_rows":
             return height(shape)
         elif self.param == "n_cols":
@@ -84,7 +84,7 @@ class UniqueShapeParemeter(Resampler):
         else:
             return size(shape)
 
-    def resample(self, shapes: Shapes, n_shapes_per_grid: int) -> List[Shape]:
+    def resample(self, shapes: Objects, n_shapes_per_grid: int) -> List[Object]:
         # Permute the indices to make it random. It maybe be
         # inefficient if the list of shapes is to big.
         shapes_list = list(shapes)
@@ -197,7 +197,7 @@ class RepeatedShapesResampler(Resampler):
 
         return freq
 
-    def resample(self, shapes: Shapes, n_shapes_per_grid: int) -> List[Shape]:
+    def resample(self, shapes: Objects, n_shapes_per_grid: int) -> List[Object]:
         if self.median:
             # Otherwise there is no way we get something where shapes
             # are repeated at 3 different frequency.
@@ -213,7 +213,7 @@ class RepeatedShapesResampler(Resampler):
 
         selected_shapes = random.sample(shapes, n_combinations)
 
-        res: List[Shape] = []
+        res: List[Object] = []
         for i, freq in enumerate(frequencies):
             shape = selected_shapes[i]
 

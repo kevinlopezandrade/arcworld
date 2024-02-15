@@ -1,12 +1,12 @@
 from typing import cast
 
 import arcworld.dsl.functional as F
-from arcworld.dsl.arc_types import Shape, Shapes
+from arcworld.dsl.arc_types import Object, Objects
 from arcworld.internal.program import TransformProgram
-from arcworld.transformations.base_transform import ShapesTransform
+from arcworld.transformations.base_transform import ObjectsTransform
 
 
-class DSLTransform(ShapesTransform):
+class DSLTransform(ObjectsTransform):
     def __init__(self, program: TransformProgram):
         self._program = program
 
@@ -14,5 +14,5 @@ class DSLTransform(ShapesTransform):
     def program(self) -> TransformProgram:
         return self._program
 
-    def transform(self, objects: Shapes) -> Shapes:
-        return cast(frozenset[Shape], F.apply(self.program, objects))
+    def transform(self, objects: Objects) -> Objects:
+        return cast(frozenset[Object], F.apply(self.program, objects))

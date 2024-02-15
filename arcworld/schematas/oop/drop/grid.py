@@ -5,7 +5,7 @@ import random
 from enum import Enum
 from typing import Optional
 
-from arcworld.dsl.arc_types import Coordinates, Shapes
+from arcworld.dsl.arc_types import Coordinates, Objects
 from arcworld.dsl.functional import normalize, recolor, shift, toindices, width
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.internal.constants import ALLOWED_COLORS, DoesNotFitError
@@ -103,7 +103,7 @@ class GravityGridBuilder:
             # Create the bar with holes.
             proto_bar = _construct_bar(grid.width, self.holes_fraction)
             bar = recolor(self.bar_color, proto_bar)
-            grid.place_shape(bar, random_pos)
+            grid.place_object(bar, random_pos)
 
         else:
             grid = BSTGridBruteForce(
@@ -128,11 +128,11 @@ class GravityGridBuilder:
             # Rotate the horizontal bar.
             proto_bar = _rot90clockwise(proto_bar)
             bar = recolor(self.bar_color, proto_bar)
-            grid.place_shape(bar, random_pos)
+            grid.place_object(bar, random_pos)
 
         return grid
 
-    def build_input_grid(self, shapes: Shapes) -> BSTGridBruteForce:
+    def build_input_grid(self, shapes: Objects) -> BSTGridBruteForce:
         grid = self._construct_base_form()
 
         N = self.max_shapes  # noqa
@@ -154,7 +154,7 @@ class GravityGridBuilder:
         placed = 0
         for shape in sampled_shapes:
             try:
-                grid.place_shape_random(shape, color_palette=self._available_colors)
+                grid.place_object_random(shape, color_palette=self._available_colors)
             except DoesNotFitError:
                 pass
             else:

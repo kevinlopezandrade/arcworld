@@ -1,4 +1,4 @@
-from arcworld.dsl.arc_types import Coordinates, Grid, Shape
+from arcworld.dsl.arc_types import Coordinates, Grid, Object
 from arcworld.dsl.functional import (
     add,
     cover,
@@ -16,7 +16,7 @@ def proto_vbar(x: int, h: int) -> Coordinates:
     return frozenset((i, x) for i in range(h))
 
 
-def switch_shapes(grid: Grid, shape_a: Shape, shape_b: Shape):
+def switch_shapes(grid: Grid, shape_a: Object, shape_b: Object):
     # Delete shape_b
     grid = cover(grid, shape_b)
 
@@ -29,7 +29,7 @@ def switch_shapes(grid: Grid, shape_a: Shape, shape_b: Shape):
     return grid
 
 
-def bbox(shape: Shape, padding: int = 0) -> Coordinates:
+def bbox(shape: Object, padding: int = 0) -> Coordinates:
     """
     Computes the bounding box coodinates of a shape
     with an optional padding paremeter to increase

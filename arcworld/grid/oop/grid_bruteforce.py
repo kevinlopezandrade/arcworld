@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from arcworld.dsl.arc_types import Coordinate, Coordinates, Grid, Shape
+from arcworld.dsl.arc_types import Coordinate, Coordinates, Grid, Object
 from arcworld.dsl.functional import (
     add,
     canvas,
@@ -24,7 +24,7 @@ from arcworld.grid.oop.util import Node, Tree, bst_insert
 from arcworld.internal.constants import DoesNotFitError
 
 
-def bounding_box(shape: Shape, padding: int = 0) -> Coordinates:
+def bounding_box(shape: Object, padding: int = 0) -> Coordinates:
     """
     Computes the bounding box coodinates of a shape
     with an optional padding paremeter to increase
@@ -60,7 +60,7 @@ class GridBruteForce:
         self._grid = canvas(self._bg_color, (h, w))
         self._margin = margin
         self._occupied: frozenset[Coordinate] = frozenset()
-        self._shapes: List[Shape] = []
+        self._shapes: List[Object] = []
 
     @property
     def height(self) -> int:
@@ -87,7 +87,7 @@ class GridBruteForce:
         return np.array(self._grid, dtype=np.uint8)
 
     @property
-    def shapes(self) -> List[Shape]:
+    def objects(self) -> List[Object]:
         return self._shapes
 
     @property
@@ -102,7 +102,7 @@ class GridBruteForce:
     def occupied(self, new_coodinates: Coordinates):
         self._occupied = new_coodinates
 
-    def add_shape(self, shape: Shape, padding: int = 0, no_bbox: bool = False):
+    def add_object(self, shape: Object, padding: int = 0, no_bbox: bool = False):
         """
         Update the grid and the occupied set, with the passed shape.
         """
@@ -120,13 +120,13 @@ class GridBruteForce:
         painted = fill(painted, 9, self.occupied)
 
         if paint_shapes:
-            for shape in self.shapes:
+            for shape in self.objects:
                 painted = paint(painted, recolor(1, shape))
 
         return np.array(painted, dtype=np.uint8)
 
-    def place_shape(
-        self, shape: Shape, pos: Coordinate, padding: int = 0, no_bbox: bool = False
+    def place_object(
+        self, shape: Object, pos: Coordinate, padding: int = 0, no_bbox: bool = False
     ):
         """
         Assumes a normalized shaped to be placed in the coordinates (y, x)
@@ -134,13 +134,13 @@ class GridBruteForce:
         Padding is only used if no_bbox = False.
         """
         shifted_shape = shift(shape, pos)
-        shifted_shape = cast(Shape, shifted_shape)
+        shifted_shape = cast(Object, shifted_shape)
 
-        self.add_shape(shifted_shape, padding=padding, no_bbox=no_bbox)
+        self.add_object(shifted_shape, padding=padding, no_bbox=no_bbox)
 
-    def place_shape_random(
-        self, shape: Shape, color_palette: Optional[Set[int]] = None
-    ) -> Shape:
+    def place_object_random(
+        self, shape: Object, color_palette: Optional[Set[int]] = None
+    ) -> Object:
         """
         Brute force algorithm to place shapes
         in a grid randomly. The shape should be in a normalized position.
@@ -174,7 +174,7 @@ class GridBruteForce:
 
         # Place the shape in a random cell
         random_cell = random.choice(list(free))
-        shifted_shape = cast(Shape, shift(shape, random_cell))
+        shifted_shape = cast(Object, shift(shape, random_cell))
 
         if color_palette is not None:
             color = random.choice(list(color_palette))
@@ -183,7 +183,7 @@ class GridBruteForce:
             color = random.choice(list(set(range(9)) - {self._bg_color}))
             shifted_shape = recolor(color, shifted_shape)
 
-        self.add_shape(shifted_shape, padding=self._margin)
+        self.add_object(shifted_shape, padding=self._margin)
 
         return shifted_shape
 
@@ -207,7 +207,7 @@ class BSTGridBruteForce(GridBruteForce):
         mode: BinaryRelation = BinaryRelation.BelowOf,
     ) -> None:
         super().__init__(h, w, bg_color, margin)
-        self._shapes_tree: Tree[Shape] = Tree(None)
+        self._shapes_tree: Tree[Object] = Tree(None)
 
         if mode == BinaryRelation.BelowOf:
             self._binary_relation = self._is_below
@@ -217,7 +217,7 @@ class BSTGridBruteForce(GridBruteForce):
             raise ValueError("Not supported binary relation")
 
     @override
-    def add_shape(self, shape: Shape, padding: int = 0, no_bbox: bool = False):
+    def add_object(self, shape: Object, padding: int = 0, no_bbox: bool = False):
         self._grid = paint(self._grid, shape)
 
         if no_bbox:
@@ -229,18 +229,18 @@ class BSTGridBruteForce(GridBruteForce):
         bst_insert(self._shapes_tree, Node(shape), self._binary_relation)
 
     @property
-    def tree(self) -> Tree[Shape]:
+    def tree(self) -> Tree[Object]:
         return self._shapes_tree
 
     @property
-    def shapes(self) -> List[Shape]:
+    def objects(self) -> List[Object]:
         """
         Return the shapes in order defined by the binary relation.
         """
-        shapes: List[Shape] = []
+        shapes: List[Object] = []
         root = self.tree.root
 
-        def inorder(root: Optional[Node[Shape]]):
+        def inorder(root: Optional[Node[Object]]):
             if root is not None:
                 inorder(root.left)
                 shapes.append(root.key)
@@ -257,7 +257,7 @@ class BSTGridBruteForce(GridBruteForce):
         return grid
 
     @staticmethod
-    def _is_below(a: Node[Shape], b: Node[Shape]) -> bool:
+    def _is_below(a: Node[Object], b: Node[Object]) -> bool:
         """
         Encodes the binary relation: a < b := a 'is below' b.
         """
@@ -270,7 +270,7 @@ class BSTGridBruteForce(GridBruteForce):
             return False
 
     @staticmethod
-    def _is_left_of(a: Node[Shape], b: Node[Shape]) -> bool:
+    def _is_left_of(a: Node[Object], b: Node[Object]) -> bool:
         """
         Encodes the binary relation: a < b := a 'is left of' b.
         """

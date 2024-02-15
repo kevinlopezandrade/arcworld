@@ -2,7 +2,7 @@ import math
 import random
 from typing import Callable, List, Optional, Tuple, cast
 
-from arcworld.dsl.arc_types import Coordinate, Grid, Shape
+from arcworld.dsl.arc_types import Coordinate, Grid, Object
 from arcworld.dsl.functional import (
     cover,
     fill,
@@ -16,7 +16,7 @@ from arcworld.dsl.functional import (
     width,
 )
 from arcworld.filters.functional.shape_filter import FunctionalFilter
-from arcworld.filters.objects_filter import ShapesFilter
+from arcworld.filters.objects_filter import ObjectsFilter
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.grid.oop.util import Node
 from arcworld.internal.constants import ALLOWED_COLORS
@@ -24,14 +24,14 @@ from arcworld.schematas.oop.drop.grid import BarOrientation, GravityGridBuilder
 from arcworld.shape.resamplers import OnlyShapesRepeated
 
 
-def in_order_append(node: Optional[Node[Shape]], shapes: List[Shape]):
+def in_order_append(node: Optional[Node[Object]], shapes: List[Object]):
     if node:
         in_order_append(node.left, shapes)
         shapes.append(node.key)
         in_order_append(node.right, shapes)
 
 
-def displace(grid: Grid, shape: Shape, disp: Coordinate, background: int = 0):
+def displace(grid: Grid, shape: Object, disp: Coordinate, background: int = 0):
     displaced = shift(shape, disp)
     to_be_freed = toindices(shape) - toindices(displaced)
     grid = fill(grid, background, to_be_freed)
@@ -40,7 +40,7 @@ def displace(grid: Grid, shape: Shape, disp: Coordinate, background: int = 0):
 
 def shift_until_touches_y(
     grid: BSTGridBruteForce,
-    shape: Shape,
+    shape: Object,
     y_dest: int,
     remove_if_limit: bool = False,
     from_below: bool = True,
@@ -71,12 +71,12 @@ def shift_until_touches_y(
         grid._occupied = grid._occupied - toindices(shape)
 
         # Update the grid.
-        grid.add_shape(shift(shape, disp), padding=0, no_bbox=True)
+        grid.add_object(shift(shape, disp), padding=0, no_bbox=True)
 
 
 def shift_until_touches_x(
     grid: BSTGridBruteForce,
-    shape: Shape,
+    shape: Object,
     x_dest: int,
     remove_if_limit: bool = False,
     from_left: bool = True,
@@ -107,10 +107,10 @@ def shift_until_touches_x(
         grid._occupied = grid._occupied - toindices(shape)
 
         # Update the grid.
-        grid.add_shape(shift(shape, disp), padding=0, no_bbox=True)
+        grid.add_object(shift(shape, disp), padding=0, no_bbox=True)
 
 
-def _get_orientation(bar: Shape) -> BarOrientation:
+def _get_orientation(bar: Object) -> BarOrientation:
     if height(bar) == 1:
         return BarOrientation.H
     elif width(bar) == 1:
@@ -119,8 +119,8 @@ def _get_orientation(bar: Shape) -> BarOrientation:
         raise ValueError("Not a bar")
 
 
-def get_max_dimension_filter(dim: float) -> Callable[[Shape], bool]:
-    def max_dim(shape: Shape) -> bool:
+def get_max_dimension_filter(dim: float) -> Callable[[Object], bool]:
+    def max_dim(shape: Object) -> bool:
         if width(shape) <= dim and height(shape) <= dim:
             return True
         else:
@@ -150,7 +150,7 @@ class DropBidirectional:
         self.holes_fraction_range = holes_fraction_range
 
     @property
-    def filters(self) -> List[ShapesFilter]:
+    def filters(self) -> List[ObjectsFilter]:
         if self._max_shape_dimension < math.inf:
             filter = FunctionalFilter(
                 f"MAX_DIM_{self._max_shape_dimension}",
@@ -193,20 +193,20 @@ class DropBidirectional:
 
     @staticmethod
     def _shift_shapes_vertically(
-        root_input: Node[Shape],
+        root_input: Node[Object],
         output_grid: BSTGridBruteForce,
         remove_if_limit: bool = False,
     ) -> BSTGridBruteForce:
         # Grab all the shapes except by the root.
-        shapes_below: List[Shape] = []
-        shapes_above: List[Shape] = []
+        shapes_below: List[Object] = []
+        shapes_above: List[Object] = []
 
         in_order_append(root_input.left, shapes_below)
         in_order_append(root_input.right, shapes_above)
 
         # Add the shapes.
         for shape in shapes_below + shapes_above:
-            output_grid.add_shape(shape, no_bbox=True)
+            output_grid.add_object(shape, no_bbox=True)
 
         # Fill the shapes below the bar.
         y_dest = ulcorner(root_input.key)[0]
@@ -234,19 +234,19 @@ class DropBidirectional:
 
     @staticmethod
     def _shift_shapes_horizontally(
-        root_input: Node[Shape],
+        root_input: Node[Object],
         output_grid: BSTGridBruteForce,
         remove_if_limit: bool = False,
     ):
-        shapes_left: List[Shape] = []
-        shapes_right: List[Shape] = []
+        shapes_left: List[Object] = []
+        shapes_right: List[Object] = []
 
         in_order_append(root_input.left, shapes_left)
         in_order_append(root_input.right, shapes_right)
 
         # Add the shapes.
         for shape in shapes_left + shapes_right:
-            output_grid.add_shape(shape, no_bbox=True)
+            output_grid.add_object(shape, no_bbox=True)
 
         # Fill the shapes to the left of the bar.
         x_dest = lrcorner(root_input.key)[1]
@@ -297,7 +297,7 @@ class DropBidirectional:
                 bg_color=grid._bg_color,
             )
 
-        output_grid.add_shape(root.key, padding=0, no_bbox=True)
+        output_grid.add_object(root.key, padding=0, no_bbox=True)
 
         if orientation == BarOrientation.H:
             self._shift_shapes_vertically(root_input=root, output_grid=output_grid)
@@ -328,7 +328,7 @@ class DropBidirectionalDots(DropBidirectional):
         )
 
     @property
-    def filters(self) -> List[ShapesFilter]:
+    def filters(self) -> List[ObjectsFilter]:
         max_dim_filter = FunctionalFilter("MAX_DIM_1", get_max_dimension_filter(1))
 
         return [max_dim_filter]
@@ -389,7 +389,7 @@ class DropBidirectionalDots(DropBidirectional):
                 bg_color=grid._bg_color,
             )
 
-        output_grid.add_shape(root.key, padding=0, no_bbox=True)
+        output_grid.add_object(root.key, padding=0, no_bbox=True)
 
         if orientation == BarOrientation.H:
             self._shift_shapes_vertically(

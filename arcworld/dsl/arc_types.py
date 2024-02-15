@@ -58,13 +58,13 @@ IntegerSet = FrozenSet[Integer]
 Grid = Tuple[Tuple[Integer]]
 Cell = Tuple[Integer, Coordinate]
 
-Shape = frozenset[Cell]
-Shapes = frozenset[Shape]
+Object = frozenset[Cell]
+Objects = frozenset[Object]
 
 Coordinates = frozenset[Coordinate]
 
 IndicesSet = frozenset[Coordinates]
 
-Patch = Union[Shape, Coordinates]
-Element = Union[Shape, Grid]
+Patch = Union[Object, Coordinates]
+Element = Union[Object, Grid]
 Piece = Union[Grid, Patch]

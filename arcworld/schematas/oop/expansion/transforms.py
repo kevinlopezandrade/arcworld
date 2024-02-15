@@ -1,10 +1,10 @@
 import random
 from typing import List, Optional, Set
 
-from arcworld.dsl.arc_types import Shape
+from arcworld.dsl.arc_types import Object
 from arcworld.dsl.functional import backdrop, height, width
 from arcworld.filters.functional.shape_filter import FunctionalFilter
-from arcworld.filters.objects_filter import ShapesFilter
+from arcworld.filters.objects_filter import ObjectsFilter
 from arcworld.schematas.oop.expansion.grid import (
     ExpansionGridBuilder,
     IntersectionGridBuilder,
@@ -17,7 +17,7 @@ from arcworld.schematas.oop.expansion.intersection_shape import (
 from arcworld.schematas.oop.expansion.line import STYLES, expand_shape
 
 
-def is_bbox_odd(shape: Shape) -> bool:
+def is_bbox_odd(shape: Object) -> bool:
     bbox = backdrop(shape)
     h = height(bbox)
     w = width(bbox)
@@ -28,7 +28,7 @@ def is_bbox_odd(shape: Shape) -> bool:
         return False
 
 
-def dot_filter(shape: Shape) -> bool:
+def dot_filter(shape: Object) -> bool:
     if width(shape) <= 1 and height(shape) <= 1:
         return True
     else:
@@ -84,18 +84,18 @@ class DotsExpansion:
         )
 
     @property
-    def filters(self) -> List[ShapesFilter]:
+    def filters(self) -> List[ObjectsFilter]:
         filter = FunctionalFilter(name="DIM_1", func=dot_filter)
 
         return [filter]
 
     def transform(self, input_grid: LinesGrid) -> LinesGrid:
         grid = input_grid.clone_no_shapes()
-        for shape in input_grid.shapes:
-            grid.add_shape(shape, no_bbox=True)
+        for shape in input_grid.objects:
+            grid.add_object(shape, no_bbox=True)
 
         # Start from the top dot.
-        for dot in grid.shapes[::-1]:
+        for dot in grid.objects[::-1]:
             for dir in self.directions:
                 STYLES[self.linestyle](
                     dot,
@@ -128,7 +128,7 @@ class DotsExpansion:
 
 class ObjectsExpansion(DotsExpansion):
     @property
-    def filters(self) -> List[ShapesFilter]:
+    def filters(self) -> List[ObjectsFilter]:
         filter = FunctionalFilter(name="IS_BBOX_ODD", func=is_bbox_odd)
 
         return [filter]
@@ -153,10 +153,10 @@ class ObjectsExpansion(DotsExpansion):
 
     def transform(self, input_grid: LinesGrid) -> LinesGrid:
         grid = input_grid.clone_no_shapes()
-        for shape in input_grid.shapes:
-            grid.add_shape(shape, no_bbox=True)
+        for shape in input_grid.objects:
+            grid.add_object(shape, no_bbox=True)
 
-        shapes = grid.shapes[::-1]
+        shapes = grid.objects[::-1]
         visited = [False for _ in shapes]
 
         for i in range(len(shapes)):

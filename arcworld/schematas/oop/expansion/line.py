@@ -1,6 +1,6 @@
 from typing import Callable, List, Set, Tuple, cast
 
-from arcworld.dsl.arc_types import Cell, Coordinate, Shape
+from arcworld.dsl.arc_types import Cell, Coordinate, Object
 from arcworld.dsl.functional import (
     add,
     backdrop,
@@ -14,11 +14,11 @@ from arcworld.schematas.oop.expansion.grid import LinesGrid
 
 
 def draw_standard_line(
-    shape: Shape,
+    shape: Object,
     direction: Coordinate,
     grid: LinesGrid,
-    line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
+    line_policy: Callable[[Object, Object, LinesGrid], None],
+    shape_policy: Callable[[Object, Object, LinesGrid], Tuple[Object, bool]],
 ):
     """
     Draws a line starting from the center of mass of the shape. Each dot in the line
@@ -40,7 +40,7 @@ def draw_standard_line(
         new_line.add(dot)
 
         if len({dot[1]} & grid.occupied) > 0:
-            for candidate_shape in grid.shapes:
+            for candidate_shape in grid.objects:
                 if (
                     len({dot[1]} & toindices(candidate_shape)) > 0
                     and candidate_shape != shape
@@ -63,11 +63,11 @@ def draw_standard_line(
 
 
 def draw_dotted_line(
-    shape: Shape,
+    shape: Object,
     direction: Coordinate,
     grid: LinesGrid,
-    line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
+    line_policy: Callable[[Object, Object, LinesGrid], None],
+    shape_policy: Callable[[Object, Object, LinesGrid], Tuple[Object, bool]],
 ):
     """
     Draws a dotted line starting from the center of mass of the shape. Each
@@ -97,7 +97,7 @@ def draw_dotted_line(
             new_line.add(dot)
 
             if len({dot[1]} & grid.occupied) > 0:
-                for candidate_shape in grid.shapes:
+                for candidate_shape in grid.objects:
                     if (
                         len({dot[1]} & toindices(candidate_shape)) > 0
                         and candidate_shape != shape
@@ -121,11 +121,11 @@ def draw_dotted_line(
 
 
 def draw_dashed_line(
-    shape: Shape,
+    shape: Object,
     direction: Coordinate,
     grid: LinesGrid,
-    line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
+    line_policy: Callable[[Object, Object, LinesGrid], None],
+    shape_policy: Callable[[Object, Object, LinesGrid], Tuple[Object, bool]],
 ):
     """
     Draws a dashed line starting from the center of mass of the shape. Each
@@ -157,7 +157,7 @@ def draw_dashed_line(
             new_line.add(dot)
 
             if len({dot[1]} & grid.occupied) > 0:
-                for candidate_shape in grid.shapes:
+                for candidate_shape in grid.objects:
                     if (
                         len({dot[1]} & toindices(candidate_shape)) > 0
                         and candidate_shape != shape
@@ -184,11 +184,11 @@ def draw_dashed_line(
 
 
 def draw_dashed_dot_line(
-    shape: Shape,
+    shape: Object,
     direction: Coordinate,
     grid: LinesGrid,
-    line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
+    line_policy: Callable[[Object, Object, LinesGrid], None],
+    shape_policy: Callable[[Object, Object, LinesGrid], Tuple[Object, bool]],
 ):
     """
     Draws a dashed dotted line starting from the center of mass of the shape. Each
@@ -225,7 +225,7 @@ def draw_dashed_dot_line(
             new_line.add(dot)
 
             if len({dot[1]} & grid.occupied) > 0:
-                for candidate_shape in grid.shapes:
+                for candidate_shape in grid.objects:
                     if (
                         len({dot[1]} & toindices(candidate_shape)) > 0
                         and candidate_shape != shape
@@ -254,11 +254,11 @@ def draw_dashed_dot_line(
 
 
 def draw_hidden_line(
-    shape: Shape,
+    shape: Object,
     direction: Coordinate,
     grid: LinesGrid,
-    line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
+    line_policy: Callable[[Object, Object, LinesGrid], None],
+    shape_policy: Callable[[Object, Object, LinesGrid], Tuple[Object, bool]],
 ):
     """
     Draws a hidden line starting from the center of mass of the shape. Each dot in
@@ -280,7 +280,7 @@ def draw_hidden_line(
         new_hidden_line.add(dot)
 
         if len({dot[1]} & grid.occupied) > 0:
-            for candidate_shape in grid.shapes:
+            for candidate_shape in grid.objects:
                 if (
                     len({dot[1]} & toindices(candidate_shape)) > 0
                     and candidate_shape != shape
@@ -304,12 +304,12 @@ def draw_hidden_line(
 
 def expand_shape(
     index: int,
-    shapes: List[Shape],
+    shapes: List[Object],
     visited: List[bool],
     direction: Coordinate,
     grid: LinesGrid,
-    line_policy: Callable[[Shape, Shape, LinesGrid], None],
-    shape_policy: Callable[[Shape, Shape, LinesGrid], Tuple[Shape, bool]],
+    line_policy: Callable[[Object, Object, LinesGrid], None],
+    shape_policy: Callable[[Object, Object, LinesGrid], Tuple[Object, bool]],
 ):
     shape = shapes[index]
 

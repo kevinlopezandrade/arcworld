@@ -4,14 +4,14 @@ from typing import Protocol
 
 from tqdm import tqdm
 
-from arcworld.dsl.arc_types import Shapes
+from arcworld.dsl.arc_types import Objects
 from arcworld.dsl.functional import lbind, recolor
 
 logger = logging.getLogger(__name__)
 
 
-class ShapeGenerator(Protocol):
-    def generate_random_shapes(self) -> Shapes:
+class ObjectGenerator(Protocol):
+    def generate_random_objects(self) -> Objects:
         ...
 
 
@@ -19,7 +19,7 @@ class ShapeGeneratorFromFile:
     def __init__(self, path: str) -> None:
         self.path = path
 
-    def generate_random_shapes(self) -> Shapes:
+    def generate_random_objects(self) -> Objects:
         logger.info(f"Loading shapes from {self.path}")
         with open(self.path, "rb") as f:
             shapes = pickle.load(f)
@@ -32,7 +32,7 @@ class ShapeGeneratorFromProtoFile:
     def __init__(self, path: str) -> None:
         self.path = path
 
-    def generate_random_shapes(self) -> Shapes:
+    def generate_random_objects(self) -> Objects:
         logger.info(f"Loading proto shapes from {self.path}")
 
         with open(self.path, "rb") as f:

@@ -1,6 +1,6 @@
 from typing import Tuple, cast
 
-from arcworld.dsl.arc_types import Coordinates, Shape
+from arcworld.dsl.arc_types import Coordinates, Object
 from arcworld.dsl.functional import (
     backdrop,
     centerofmass,
@@ -23,18 +23,18 @@ from arcworld.schematas.oop.expansion.grid import LinesGrid
 # drawing algorithm.
 
 
-def no_op(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def no_op(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     return shape, True
 
 
-def paint_outbox(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def paint_outbox(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     new_shape = frozenset(recolor(color(shape), outbox(shape)) | shape)
     grid.grid = paint(grid.grid, new_shape)
     grid.occupied = grid.occupied | toindices(new_shape)
     return new_shape, True
 
 
-def delete(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def delete(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     grid.grid = fill(grid.grid, grid.bg_color, toindices(shape))
     grid.occupied = grid.occupied - toindices(shape)
 
@@ -57,14 +57,14 @@ def delete(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
     return frozenset({}), False
 
 
-def extend_color(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def extend_color(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     new_shape = recolor(color(dot), shape)
     grid.grid = paint(grid.grid, new_shape)
 
     return new_shape, True
 
 
-def make_dot(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def make_dot(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     grid.grid = fill(grid.grid, grid.bg_color, toindices(shape))
 
     # Construct the new shape
@@ -83,7 +83,7 @@ def make_dot(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
     return new_shape, False
 
 
-def fill_bbox(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def fill_bbox(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     new_shape = recolor(color(dot), backdrop(shape) - toindices(shape))
     grid.grid = paint(grid.grid, new_shape)
     grid.occupied = grid.occupied | toindices(new_shape)
@@ -91,36 +91,38 @@ def fill_bbox(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
     return new_shape, True
 
 
-def flip_vertically(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def flip_vertically(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     grid.grid = fill(grid.grid, grid.bg_color, toindices(shape))
     grid.occupied = grid.occupied - toindices(shape)
 
-    new_shape = cast(Shape, vmirror(shape))
+    new_shape = cast(Object, vmirror(shape))
     grid.grid = paint(grid.grid, new_shape)
     grid.occupied = grid.occupied | toindices(new_shape)
 
     return new_shape, False
 
 
-def flip_horizontally(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def flip_horizontally(
+    dot: Object, shape: Object, grid: LinesGrid
+) -> Tuple[Object, bool]:
     grid.grid = fill(grid.grid, grid.bg_color, toindices(shape))
     grid.occupied = grid.occupied - toindices(shape)
 
-    new_shape = cast(Shape, hmirror(shape))
+    new_shape = cast(Object, hmirror(shape))
     grid.grid = paint(grid.grid, new_shape)
     grid.occupied = grid.occupied | toindices(new_shape)
 
     return new_shape, False
 
 
-def rotate_90(dot: Shape, shape: Shape, grid: LinesGrid) -> Tuple[Shape, bool]:
+def rotate_90(dot: Object, shape: Object, grid: LinesGrid) -> Tuple[Object, bool]:
     grid.grid = fill(grid.grid, grid.bg_color, toindices(shape))
     grid.occupied = grid.occupied - toindices(shape)
 
     new_shape = recolor(color(shape), frozenset((-j, i) for i, j in toindices(shape)))
     new_shape = normalize(new_shape)
     new_shape = shift(new_shape, ulcorner(backdrop(shape)))
-    new_shape = cast(Shape, new_shape)
+    new_shape = cast(Object, new_shape)
 
     grid.grid = paint(grid.grid, new_shape)
     grid.occupied = grid.occupied | toindices(new_shape)

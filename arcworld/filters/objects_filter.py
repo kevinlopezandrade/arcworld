@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
 
-from arcworld.dsl.arc_types import Shapes
+from arcworld.dsl.arc_types import Objects
 
 
-class ShapesFilter(metaclass=ABCMeta):
+class ObjectsFilter(metaclass=ABCMeta):
     """
     Interface for every shape filterer.
     """
@@ -13,5 +13,5 @@ class ShapesFilter(metaclass=ABCMeta):
     )
 
     @abstractmethod
-    def filter(self, objects: Shapes, silent: bool = True) -> Shapes:
+    def filter(self, objects: Objects, silent: bool = True) -> Objects:
         pass

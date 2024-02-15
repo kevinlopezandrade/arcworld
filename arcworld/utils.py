@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-from arcworld.dsl.arc_types import Coordinates, Shape
+from arcworld.dsl.arc_types import Coordinates, Object
 from arcworld.dsl.functional import canvas, height, normalize, paint, recolor, width
 from arcworld.internal.constants import COLORMAP, NORM, TASK_DICT, Example, Task
 
@@ -30,8 +30,8 @@ def decode_json_task(file_path: str) -> Task:
     return task
 
 
-def plot_shape(shape: Shape):
-    shape = cast(Shape, normalize(shape))
+def plot_object(shape: Object):
+    shape = cast(Object, normalize(shape))
     h = height(shape)
     w = width(shape)
     grid = canvas(0, (h, w))
@@ -50,7 +50,7 @@ def plot_shape(shape: Shape):
     plt.show()
 
 
-def plot_shapes(*shapes):
+def plot_objects(*shapes):
     h = max(height(shape) for shape in shapes)
     w = max(height(shape) for shape in shapes)
 
@@ -71,7 +71,7 @@ def plot_shapes(*shapes):
 
 def plot_proto_shape(proto_shape: Coordinates):
     shape = recolor(7, proto_shape)
-    plot_shape(shape)
+    plot_object(shape)
 
 
 def plot_grid(grid: NDArray[np.uint8], return_fig: bool = False):

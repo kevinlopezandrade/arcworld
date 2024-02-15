@@ -22,10 +22,10 @@ from arcworld.dsl.arc_types import (
     IntegerSet,
     IterableContainer,
     Numerical,
+    Object,
+    Objects,
     Patch,
     Piece,
-    Shape,
-    Shapes,
     SupportsRichComparison,
 )
 
@@ -534,7 +534,7 @@ def colorcount(element: Element, value: Integer) -> Integer:
     return sum(v == value for v, _ in element)
 
 
-def colorfilter(objs: Shapes, value: Integer) -> Shapes:
+def colorfilter(objs: Objects, value: Integer) -> Objects:
     """filter objects by color"""
     return frozenset(obj for obj in objs if next(iter(obj))[0] == value)
 
@@ -603,7 +603,7 @@ def toindices(patch: Patch) -> Coordinates:
     return cast(Coordinates, patch)
 
 
-def recolor(value: Integer, patch: Patch) -> Shape:
+def recolor(value: Integer, patch: Patch) -> Object:
     """recolor patch"""
     return frozenset((value, index) for index in toindices(patch))
 
@@ -656,7 +656,7 @@ def neighbors(loc: Coordinate) -> Coordinates:
 
 def objects(
     grid: Grid, univalued: Boolean, diagonal: Boolean, without_bg: Boolean
-) -> Shapes:
+) -> Objects:
     """objects occurring on the grid"""
     bg = mostcolor(grid) if without_bg else None
     objs = set()
@@ -687,7 +687,7 @@ def objects(
     return frozenset(objs)
 
 
-def partition(grid: Grid) -> Shapes:
+def partition(grid: Grid) -> Objects:
     """each cell with the same value part of the same object"""
     return frozenset(
         frozenset(
@@ -700,7 +700,7 @@ def partition(grid: Grid) -> Shapes:
     )
 
 
-def fgpartition(grid: Grid) -> Shapes:
+def fgpartition(grid: Grid) -> Objects:
     """each cell with the same value part of the same object without background"""
     return frozenset(
         frozenset(
@@ -804,12 +804,12 @@ def numcolors(element: Element) -> Integer:
     return len(palette(element))
 
 
-def color(obj: Shape) -> Integer:
+def color(obj: Object) -> Integer:
     """color of object"""
     return next(iter(obj))[0]
 
 
-def toobject(patch: Patch, grid: Grid) -> Shape:
+def toobject(patch: Patch, grid: Grid) -> Object:
     """object from patch and grid"""
     h, w = len(grid), len(grid[0])
     return frozenset(
@@ -817,7 +817,7 @@ def toobject(patch: Patch, grid: Grid) -> Shape:
     )
 
 
-def asobject(grid: Grid) -> Shape:
+def asobject(grid: Grid) -> Object:
     """conversion of grid to object"""
     return frozenset((v, (i, j)) for i, r in enumerate(grid) for j, v in enumerate(r))
 
@@ -884,7 +884,7 @@ def fill(grid: Grid, value: Integer, patch: Patch) -> Grid:
     return tuple(tuple(row) for row in grid_filled)
 
 
-def paint(grid: Grid, obj: Shape) -> Grid:
+def paint(grid: Grid, obj: Object) -> Grid:
     """paint object to grid"""
     h, w = len(grid), len(grid[0])
     grid_painted = list(list(row) for row in grid)
@@ -906,7 +906,7 @@ def underfill(grid: Grid, value: Integer, patch: Patch) -> Grid:
     return tuple(tuple(row) for row in grid_filled)
 
 
-def underpaint(grid: Grid, obj: Shape) -> Grid:
+def underpaint(grid: Grid, obj: Object) -> Grid:
     """paint object to grid where there is background"""
     h, w = len(grid), len(grid[0])
     bg = mostcolor(grid)
@@ -1107,7 +1107,7 @@ def trim(grid: Grid) -> Grid:
     return tuple(r[1:-1] for r in grid[1:-1])
 
 
-def move(grid: Grid, obj: Shape, offset: Coordinate) -> Grid:
+def move(grid: Grid, obj: Object, offset: Coordinate) -> Grid:
     """move object on grid"""
     return paint(cover(grid, obj), shift(obj, offset))
 
@@ -1216,7 +1216,7 @@ def shoot(start: Coordinate, direction: Coordinate) -> Coordinates:
     return connect(start, (start[0] + 42 * direction[0], start[1] + 42 * direction[1]))
 
 
-def occurrences(grid: Grid, obj: Shape) -> Coordinates:
+def occurrences(grid: Grid, obj: Object) -> Coordinates:
     """locations of occurrences of object in grid"""
     occurrences = set()
     normed = normalize(obj)
@@ -1237,7 +1237,7 @@ def occurrences(grid: Grid, obj: Shape) -> Coordinates:
     return frozenset(occurrences)
 
 
-def frontiers(grid: Grid) -> Shapes:
+def frontiers(grid: Grid) -> Objects:
     """set of frontiers"""
     h, w = len(grid), len(grid[0])
     row_indices = tuple(i for i, r in enumerate(grid) if len(set(r)) == 1)
@@ -1262,7 +1262,7 @@ def compress(grid: Grid) -> Grid:
     )
 
 
-def hperiod(obj: Shape) -> Integer:
+def hperiod(obj: Object) -> Integer:
     """horizontal periodicity"""
     normalized = normalize(obj)
     w = width(normalized)
@@ -1274,7 +1274,7 @@ def hperiod(obj: Shape) -> Integer:
     return w
 
 
-def vperiod(obj: Shape) -> Integer:
+def vperiod(obj: Object) -> Integer:
     """vertical periodicity"""
     normalized = normalize(obj)
     h = height(normalized)

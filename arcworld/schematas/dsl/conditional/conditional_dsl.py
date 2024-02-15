@@ -1,7 +1,7 @@
 import random
 from typing import Tuple
 
-from arcworld.dsl.arc_types import Coordinate, Shapes
+from arcworld.dsl.arc_types import Coordinate, Objects
 from arcworld.grid.dsl.grid_dsl import GridDSLOld
 
 
@@ -59,7 +59,7 @@ class ConditionalGridSampler:
         return self._palette_schemes
 
     def sample_input_grid(
-        self, satisfying_objects: Shapes, unsatisfying_objects: Shapes
+        self, satisfying_objects: Objects, unsatisfying_objects: Objects
     ) -> GridDSLOld:
         h = random.randint(self.min_dim, self.max_dim)
         w = random.randint(self.min_dim, self.max_dim)

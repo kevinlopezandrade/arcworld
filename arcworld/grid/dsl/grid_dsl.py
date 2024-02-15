@@ -2,7 +2,7 @@ import random
 from typing import Any, List, Tuple
 
 from arcworld.deprecated.generator_utils import get_locations
-from arcworld.dsl.arc_types import Coordinate, Grid, Shape
+from arcworld.dsl.arc_types import Coordinate, Grid, Object
 from arcworld.dsl.functional import (
     add,
     apply,
@@ -42,7 +42,7 @@ class GridDSLOld:
             (h, w), max_obj_dimension, margin, 2
         )
 
-        self._objects: List[Shape] = []
+        self._objects: List[Object] = []
 
     @property
     def grid(self) -> Grid:
@@ -53,7 +53,7 @@ class GridDSLOld:
         self._grid = value
 
     @property
-    def objects(self) -> Tuple[Shape]:
+    def objects(self) -> Tuple[Object]:
         """
         The user is not expected to mutate this list.
         So we return the a tuple of the internal
@@ -93,7 +93,7 @@ class GridDSLOld:
     def palette_schemes(self) -> Any:
         return self._palette_schemes
 
-    def _prune_locations(self, obj: Shape):
+    def _prune_locations(self, obj: Object):
         """
         Basically prunes the avalaible locations
         given an object coordinates.
@@ -106,7 +106,7 @@ class GridDSLOld:
                     locations_pruned.add((a, b))
             self.free_locations = locations_pruned
 
-    def place_object(self, obj: Shape) -> Shape:
+    def place_object(self, obj: Object) -> Object:
         """
         Places the shape in a random position in the grid.
 
