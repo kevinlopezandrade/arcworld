@@ -1,5 +1,6 @@
-from arcworld.dsl.arc_types import Object
-from arcworld.dsl.functional import color, outbox, paint, recolor
+from arcdsl.arc_types import Object
+from arcdsl.dsl import color, outbox, paint, recolor
+
 from arcworld.schematas.oop.expansion.grid import LinesGrid
 
 

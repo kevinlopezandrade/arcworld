@@ -1,9 +1,12 @@
 # pyright: strict
+import ast
 from typing import Any, Callable, cast
 
-from arcworld.dsl.arc_constants import ZERO
-from arcworld.dsl.arc_types import Coordinates, Object
-from arcworld.dsl.functional import (
+import arcdsl.constants
+import arcdsl.dsl as F
+from arcdsl.arc_types import Coordinates, Object
+from arcdsl.constants import ZERO
+from arcdsl.dsl import (
     backdrop,
     both,
     chain,
@@ -20,7 +23,26 @@ from arcworld.dsl.functional import (
     size,
     toindices,
 )
-from arcworld.dsl.util import build_function_from_program
+
+# TODO: Check how to DEAL with the renaming of T and F.
+ALLOWED_NAMESPACE = vars(F) | vars(arcdsl.constants)
+
+
+def build_function_from_program(program: str) -> Callable[..., Any]:
+    program_ast = ast.parse(program, mode="eval")
+
+    for node in ast.walk(program_ast.body):
+        if isinstance(node, ast.Name):
+            name = node.id
+            if not (hasattr(F, name) or hasattr(arcdsl.constants, name)):
+                raise ValueError(
+                    "Command contains functions and constants outside the DSL"
+                )
+
+    compiled_program = compile(program_ast, filename="<string>", mode="eval")
+    function = eval(compiled_program, ALLOWED_NAMESPACE)
+
+    return function
 
 
 class Program:

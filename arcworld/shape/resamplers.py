@@ -3,8 +3,8 @@ import random
 from abc import ABCMeta, abstractmethod
 from typing import List, Tuple
 
-from arcworld.dsl.arc_types import Object, Objects
-from arcworld.dsl.functional import height, size, width
+from arcdsl.arc_types import Object, Objects
+from arcdsl.dsl import height, size, width
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,7 @@
 import random
 from typing import Any, List, Tuple
 
-from arcworld.deprecated.generator_utils import get_locations
-from arcworld.dsl.arc_types import Coordinate, Grid, Object
-from arcworld.dsl.functional import (
+from arcdsl.dsl import (
     add,
     apply,
     astuple,
@@ -17,6 +15,9 @@ from arcworld.dsl.functional import (
     shift,
     width,
 )
+
+from arcworld.deprecated.generator_utils import get_locations
+from arcworld.dsl.arc_types import Coordinate, Grid, Object
 
 
 class GridDSLOld:

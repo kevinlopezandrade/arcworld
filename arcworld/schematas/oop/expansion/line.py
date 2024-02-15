@@ -1,15 +1,8 @@
 from typing import Callable, List, Set, Tuple, cast
 
-from arcworld.dsl.arc_types import Cell, Coordinate, Object
-from arcworld.dsl.functional import (
-    add,
-    backdrop,
-    centerofmass,
-    color,
-    paint,
-    recolor,
-    toindices,
-)
+from arcdsl.arc_types import Cell, Coordinate, Object
+from arcdsl.dsl import add, backdrop, centerofmass, color, paint, recolor, toindices
+
 from arcworld.schematas.oop.expansion.grid import LinesGrid
 
 

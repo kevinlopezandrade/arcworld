@@ -3,11 +3,8 @@ from enum import Enum
 from typing import List, Optional, Set, cast
 
 import numpy as np
-from numpy.typing import NDArray
-from typing_extensions import override
-
-from arcworld.dsl.arc_types import Coordinate, Coordinates, Grid, Object
-from arcworld.dsl.functional import (
+from arcdsl.arc_types import Coordinate, Coordinates, Grid, Object
+from arcdsl.dsl import (
     add,
     canvas,
     fill,
@@ -20,6 +17,9 @@ from arcworld.dsl.functional import (
     ulcorner,
     width,
 )
+from numpy.typing import NDArray
+from typing_extensions import override
+
 from arcworld.grid.oop.util import Node, Tree, bst_insert
 from arcworld.internal.constants import DoesNotFitError
 

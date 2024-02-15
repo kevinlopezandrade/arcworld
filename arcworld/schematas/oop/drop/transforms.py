@@ -2,8 +2,8 @@ import math
 import random
 from typing import Callable, List, Optional, Tuple, cast
 
-from arcworld.dsl.arc_types import Coordinate, Grid, Object
-from arcworld.dsl.functional import (
+from arcdsl.arc_types import Coordinate, Grid, Object
+from arcdsl.dsl import (
     cover,
     fill,
     height,
@@ -15,6 +15,7 @@ from arcworld.dsl.functional import (
     ulcorner,
     width,
 )
+
 from arcworld.filters.functional.shape_filter import FunctionalFilter
 from arcworld.filters.objects_filter import ObjectsFilter
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce

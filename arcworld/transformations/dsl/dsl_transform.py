@@ -1,7 +1,8 @@
 from typing import cast
 
-import arcworld.dsl.functional as F
-from arcworld.dsl.arc_types import Object, Objects
+import arcdsl.dsl as F
+from arcdsl.arc_types import Object, Objects
+
 from arcworld.internal.program import TransformProgram
 from arcworld.transformations.base_transform import ObjectsTransform
 

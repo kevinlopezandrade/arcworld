@@ -4,10 +4,10 @@ from typing import List, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+from arcdsl.arc_types import Coordinates, Object
+from arcdsl.dsl import canvas, height, normalize, paint, recolor, width
 from numpy.typing import NDArray
 
-from arcworld.dsl.arc_types import Coordinates, Object
-from arcworld.dsl.functional import canvas, height, normalize, paint, recolor, width
 from arcworld.internal.constants import COLORMAP, NORM, TASK_DICT, Example, Task
 
 

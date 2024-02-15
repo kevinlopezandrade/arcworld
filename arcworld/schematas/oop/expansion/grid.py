@@ -2,8 +2,8 @@ import random
 from collections import defaultdict
 from typing import Dict, Set, cast
 
-from arcworld.dsl.arc_types import Coordinate, Coordinates, Object, Objects
-from arcworld.dsl.functional import (
+from arcdsl.arc_types import Coordinate, Coordinates, Object, Objects
+from arcdsl.dsl import (
     add,
     backdrop,
     centerofmass,
@@ -15,6 +15,7 @@ from arcworld.dsl.functional import (
     toindices,
     width,
 )
+
 from arcworld.grid.oop.grid_bruteforce import (
     BinaryRelation,
     BSTGridBruteForce,

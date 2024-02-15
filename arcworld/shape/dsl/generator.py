@@ -2,11 +2,9 @@ import logging
 import random
 from typing import Callable, List, Optional, cast
 
-from tqdm import tqdm
-
-from arcworld.dsl.arc_constants import FIVE
-from arcworld.dsl.arc_types import Coordinate, Coordinates, IterableContainer, Objects
-from arcworld.dsl.functional import (
+from arcdsl.arc_types import Coordinate, Coordinates, IterableContainer, Objects
+from arcdsl.constants import FIVE
+from arcdsl.dsl import (
     apply,
     both,
     compose,
@@ -24,6 +22,8 @@ from arcworld.dsl.functional import (
     sfilter,
     width,
 )
+from tqdm import tqdm
+
 from arcworld.shape.dsl.augmentations import AUGMENTATION_OPTIONS
 
 logger = logging.getLogger(__name__)

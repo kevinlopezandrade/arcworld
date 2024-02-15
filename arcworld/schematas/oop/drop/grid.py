@@ -5,8 +5,9 @@ import random
 from enum import Enum
 from typing import Optional
 
-from arcworld.dsl.arc_types import Coordinates, Objects
-from arcworld.dsl.functional import normalize, recolor, shift, toindices, width
+from arcdsl.arc_types import Coordinates, Objects
+from arcdsl.dsl import normalize, recolor, shift, toindices, width
+
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.internal.constants import ALLOWED_COLORS, DoesNotFitError
 from arcworld.shape.resamplers import Resampler

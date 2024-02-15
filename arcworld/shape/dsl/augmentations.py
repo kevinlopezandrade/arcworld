@@ -1,6 +1,6 @@
 from typing import Callable, Dict, cast
 
-from arcworld.dsl.functional import (
+from arcdsl.dsl import (
     Coordinates,
     box,
     cmirror,

@@ -1,7 +1,7 @@
 from typing import Tuple, cast
 
-from arcworld.dsl.arc_types import Coordinates, Object
-from arcworld.dsl.functional import (
+from arcdsl.arc_types import Coordinates, Object
+from arcdsl.dsl import (
     backdrop,
     centerofmass,
     color,
@@ -16,6 +16,7 @@ from arcworld.dsl.functional import (
     ulcorner,
     vmirror,
 )
+
 from arcworld.schematas.oop.expansion.grid import LinesGrid
 
 # Every Transformation should return the transformed shape plus a boolean

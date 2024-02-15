@@ -2,10 +2,9 @@ import logging
 import pickle
 from typing import Protocol
 
+from arcdsl.arc_types import Objects
+from arcdsl.dsl import lbind, recolor
 from tqdm import tqdm
-
-from arcworld.dsl.arc_types import Objects
-from arcworld.dsl.functional import lbind, recolor
 
 logger = logging.getLogger(__name__)
 

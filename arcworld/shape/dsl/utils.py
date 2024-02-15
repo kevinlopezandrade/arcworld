@@ -1,5 +1,5 @@
-from arcworld.dsl.arc_types import Coordinates, Grid, Object
-from arcworld.dsl.functional import (
+from arcdsl.arc_types import Coordinates, Grid, Object
+from arcdsl.dsl import (
     add,
     cover,
     lrcorner,

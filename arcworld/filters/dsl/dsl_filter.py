@@ -1,10 +1,10 @@
 import logging
 from typing import cast
 
+import arcdsl.dsl as F
+from arcdsl.arc_types import Objects
 from tqdm import tqdm
 
-import arcworld.dsl.functional as F
-from arcworld.dsl.arc_types import Objects
 from arcworld.filters.objects_filter import ObjectsFilter
 from arcworld.internal.program import FilterProgram
 

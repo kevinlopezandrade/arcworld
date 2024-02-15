@@ -1,8 +1,9 @@
 import random
 from typing import List, Optional, Set
 
-from arcworld.dsl.arc_types import Object
-from arcworld.dsl.functional import backdrop, height, width
+from arcdsl.arc_types import Object
+from arcdsl.dsl import backdrop, height, width
+
 from arcworld.filters.functional.shape_filter import FunctionalFilter
 from arcworld.filters.objects_filter import ObjectsFilter
 from arcworld.schematas.oop.expansion.grid import (
