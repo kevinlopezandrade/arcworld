@@ -1,8 +1,8 @@
 from typing import Callable
 
+from arcdsl.arc_types import Object, Objects
 from tqdm import tqdm
 
-from arcworld.dsl.arc_types import Object, Objects
 from arcworld.filters.objects_filter import ObjectsFilter
 
 

@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from arcworld.dsl.arc_types import Objects
+from arcdsl.arc_types import Objects
 
 
 class ObjectsFilter(metaclass=ABCMeta):

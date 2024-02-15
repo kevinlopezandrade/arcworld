@@ -91,10 +91,10 @@ class LinesGrid(BSTGridBruteForce):
             self.directions, self.height, self.width, shape
         )
 
-    def place_shape_random(
+    def place_object_random(
         self, shape: Object, color_palette: Set[int] | None = None
     ) -> Object:
-        shifted_shape = super().place_shape_random(shape, color_palette)
+        shifted_shape = super().place_object_random(shape, color_palette)
         self._prune_possible_lines(shifted_shape)
 
         return shifted_shape
@@ -204,7 +204,7 @@ class ExpansionGridBuilder:
         placed = 0
         for shape in sampled_shapes:
             try:
-                placed_shape = grid.place_shape_random(
+                placed_shape = grid.place_object_random(
                     shape, color_palette=self._avalaible_colors
                 )
             except DoesNotFitError:
@@ -258,13 +258,13 @@ class IntersectionGridBuilder:
             try:
                 coin = random.choices(population=[0, 1], weights=[0.25, 0.75], k=1)[0]
                 if first:
-                    placed_shape = grid.place_shape_random(
+                    placed_shape = grid.place_object_random(
                         shape, color_palette=self._avalaible_colors
                     )
                     first = False
                 else:
                     if coin == 0:
-                        placed_shape = grid.place_shape_random(
+                        placed_shape = grid.place_object_random(
                             shape, color_palette=self._avalaible_colors
                         )
                     else:

@@ -3,7 +3,7 @@ import random
 from typing import Optional
 
 import numpy as np
-from arcdsl.arc_types import Coordinate, Shape, Shapes
+from arcdsl.arc_types import Coordinate, Object, Objects
 from arcdsl.dsl import (
     add,
     backdrop,
@@ -17,20 +17,15 @@ from arcdsl.dsl import (
     ulcorner,
     width,
 )
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 from tqdm import tqdm
 
 from arcworld.filters.functional.shape_filter import FunctionalFilter
 from arcworld.internal.constants import ALLOWED_COLORS, Example, Task
-from arcworld.objects.dsl.generator import ShapeGeneratorDSL
-from arcworld.storage.fingerprint import hash_task, normalize_task
-from arcworld.storage.table import Base, Engineered
-
-AUTHOR = "kevinlo@student.ethz.ch"
+from arcworld.objects.dsl.generator import ObjectGeneratorDSL
+from arcworld.utils import plot_task
 
 
-def is_bbox_square(shape: Shape):
+def is_bbox_square(shape: Object):
     bbox = backdrop(shape)
     h = height(bbox)
     w = width(bbox)
@@ -41,7 +36,7 @@ def is_bbox_square(shape: Shape):
         return False
 
 
-def replicate_based_on_shape(shape: Shape) -> Shape:
+def replicate_based_on_shape(shape: Object) -> Object:
     ur = ulcorner(shape)
     dim_bbox = height(backdrop(shape))
 
@@ -59,8 +54,8 @@ def generate(N_tasks: int, N_examples: int, seed: Optional[int] = None):  # noqa
     random.seed(seed)
 
     # With a square bounding box of 5, max dim is 25.
-    generator = ShapeGeneratorDSL(max_variations=30, max_obj_dimension=4)
-    shapes: Shapes = generator.generate_random_shapes()
+    generator = ObjectGeneratorDSL(max_variations=30, max_obj_dimension=4)
+    shapes: Objects = generator.generate_random_objects()
     print("Total number of generated shapes: ", len(shapes))
 
     for _ in tqdm(range(N_tasks), desc="Generating tasks"):
@@ -96,18 +91,5 @@ def generate(N_tasks: int, N_examples: int, seed: Optional[int] = None):  # noqa
             yield task
 
 
-engine = create_engine("sqlite:////Users/kev/arcworld/datasets/tasks.db", echo=False)
-Base.metadata.create_all(engine)
-
-with Session(engine) as session:
-    for task in generate(256, 4, 7):
-        session.add(
-            Engineered(
-                id=hash_task(task),
-                author=AUTHOR,
-                transformation="5b6cbef5",
-                task=normalize_task(task),
-                split="evaluation",
-            )
-        )
-        session.commit()
+for task in generate(10, 4, 7):
+    plot_task(task)
