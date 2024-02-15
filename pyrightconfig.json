@@ -8,7 +8,7 @@
         "arcworld/examples.py",
         "arcworld/dsl/shape_utils.py",
         "arcworld/transformations/oop",
-        "arcworld/shape/oop",
+        "arcworld/objects/oop",
         "arcworld/internal/point_cloud",
         "arcworld/filters/functional/single_shape_conditionals.py"
     ],

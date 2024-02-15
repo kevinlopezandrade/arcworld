@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 from arcworld.dsl.arc_types import Shapes
 from arcworld.internal.constants import Example, Task
+from arcworld.objects.dsl.generator import ShapeGeneratorDSL
 from arcworld.schematas.oop.expansion.transforms import DotsExpansion
-from arcworld.shape.dsl.generator import ShapeGeneratorDSL
 from arcworld.storage.fingerprint import hash_task, normalize_task
 from arcworld.storage.table import Base, Schemata
 

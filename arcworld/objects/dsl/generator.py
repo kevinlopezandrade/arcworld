@@ -24,7 +24,7 @@ from arcdsl.dsl import (
 )
 from tqdm import tqdm
 
-from arcworld.shape.dsl.augmentations import AUGMENTATION_OPTIONS
+from arcworld.objects.dsl.augmentations import AUGMENTATION_OPTIONS
 
 logger = logging.getLogger(__name__)
 

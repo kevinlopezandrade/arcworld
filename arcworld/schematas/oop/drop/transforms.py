@@ -21,8 +21,8 @@ from arcworld.filters.objects_filter import ObjectsFilter
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
 from arcworld.grid.oop.util import Node
 from arcworld.internal.constants import ALLOWED_COLORS
+from arcworld.objects.resamplers import OnlyShapesRepeated
 from arcworld.schematas.oop.drop.grid import BarOrientation, GravityGridBuilder
-from arcworld.shape.resamplers import OnlyShapesRepeated
 
 
 def in_order_append(node: Optional[Node[Object]], shapes: List[Object]):

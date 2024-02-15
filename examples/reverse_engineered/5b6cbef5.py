@@ -3,12 +3,8 @@ import random
 from typing import Optional
 
 import numpy as np
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from tqdm import tqdm
-
-from arcworld.dsl.arc_types import Coordinate, Shape, Shapes
-from arcworld.dsl.functional import (
+from arcdsl.arc_types import Coordinate, Shape, Shapes
+from arcdsl.dsl import (
     add,
     backdrop,
     canvas,
@@ -21,9 +17,13 @@ from arcworld.dsl.functional import (
     ulcorner,
     width,
 )
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from tqdm import tqdm
+
 from arcworld.filters.functional.shape_filter import FunctionalFilter
 from arcworld.internal.constants import ALLOWED_COLORS, Example, Task
-from arcworld.shape.dsl.generator import ShapeGeneratorDSL
+from arcworld.objects.dsl.generator import ShapeGeneratorDSL
 from arcworld.storage.fingerprint import hash_task, normalize_task
 from arcworld.storage.table import Base, Engineered
 

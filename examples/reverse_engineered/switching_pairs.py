@@ -1,8 +1,9 @@
-from arcworld.dsl.functional import shift, subtract, ulcorner
+from arcdsl.dsl import shift, subtract, ulcorner
+
 from arcworld.grid.dsl.grid_dsl import GridDSL
 from arcworld.grid.oop.grid_bruteforce import BinaryRelation, BSTGridBruteForce
-from arcworld.shape.dsl.generator import ShapeGeneratorDSL
-from arcworld.shape.dsl.utils import proto_vbar, switch_shapes
+from arcworld.objects.dsl.generator import ShapeGeneratorDSL
+from arcworld.objects.dsl.utils import proto_vbar, switch_shapes
 from arcworld.utils import plot_grids
 
 generator = ShapeGeneratorDSL(max_obj_dimension=2)

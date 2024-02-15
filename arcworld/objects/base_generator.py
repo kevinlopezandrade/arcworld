@@ -14,7 +14,7 @@ class ObjectGenerator(Protocol):
         ...
 
 
-class ShapeGeneratorFromFile:
+class ObjectGeneratorFromFile:
     def __init__(self, path: str) -> None:
         self.path = path
 
@@ -27,7 +27,7 @@ class ShapeGeneratorFromFile:
         return shapes
 
 
-class ShapeGeneratorFromProtoFile:
+class ObjectGeneratorFromProtoFile:
     def __init__(self, path: str) -> None:
         self.path = path
 

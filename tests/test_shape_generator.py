@@ -1,7 +1,8 @@
 import random
 
-from arcworld.dsl.functional import normalize
-from arcworld.shape.dsl.generator import ObjectGeneratorDSL
+from arcdsl.dsl import normalize
+
+from arcworld.objects.dsl.generator import ObjectGeneratorDSL
 
 
 def test_no_augmentations_no_variations():
